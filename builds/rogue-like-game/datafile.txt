@@ -1,0 +1,33 @@
+<items>
+	<money>
+		<desc>{[Increases the amount of money earned per kill]}</desc>
+		<directory>{assets\\chest\\powerups\\money-icon.png}</directory>
+		<[current index]>{5}</[current index]>
+		<[price list]>{90,100,130,140,150}</[price list]>
+		<power>{2,3,5,6,8}</power>
+	</money>
+	<health>
+		<desc>{[Increases maximum health]}</desc>
+		<directory>{assets\\chest\\powerups\\health.png}</directory>
+		<[current index]>{5}</[current index]>
+		<[price list]>{100,120,140,160,180}</[price list]>
+		<power>{100,120,140,170,200}</power>
+	</health>
+	<speed>
+		<desc>{[Increases speed]}</desc>
+		<directory>{assets\\chest\\powerups\\fast-run.png}</directory>
+		<[current index]>{5}</[current index]>
+		<[price list]>{150,160,170,180,190}</[price list]>
+		<power>{150,180,200,230,250}</power>
+	</speed>
+</items>
+<screenshots>
+	<directory>{screenshots\\images\\}</directory>
+	<prefix>{capture}</prefix>
+	<count>{18}</count>
+</screenshots>
+<character>
+	<data>
+		<coins>{1034}</coins>
+	</data>
+</character>
