@@ -1,7 +1,7 @@
 #ifndef GAME_H
 #define GAME_H
 
-#include "../src/headers/includes.h"
+#include "../custom-game-engine/headers/includes.h"
 
 const rect mapBound = 
 {
