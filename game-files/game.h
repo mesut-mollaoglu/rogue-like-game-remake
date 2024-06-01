@@ -41,43 +41,43 @@ struct Character
         direction = Horizontal::Norm;
         states.currentState = "Idle";
 
-        states.states["Walking"].animator.frames.push_back(new Sprite("assets\\character\\move\\frame-1.png"));
-        states.states["Walking"].animator.frames.push_back(new Sprite("assets\\character\\move\\frame-2.png"));
-        states.states["Walking"].animator.frames.push_back(new Sprite("assets\\character\\move\\frame-3.png"));
-        states.states["Walking"].animator.frames.push_back(new Sprite("assets\\character\\move\\frame-4.png"));
+        states.states["Walking"].animator.frames.emplace_back("assets\\character\\move\\frame-1.png");
+        states.states["Walking"].animator.frames.emplace_back("assets\\character\\move\\frame-2.png");
+        states.states["Walking"].animator.frames.emplace_back("assets\\character\\move\\frame-3.png");
+        states.states["Walking"].animator.frames.emplace_back("assets\\character\\move\\frame-4.png");
         states.states["Walking"].animator.data.duration = 0.2f;
-        states.states["Walking"].animator.data.update = aUpdate::Loop;
+        states.states["Walking"].animator.data.update = animUpdate::Loop;
         states.states["Walking"].keys[GLFW_KEY_W] = Key::Held;
         states.states["Walking"].keys[GLFW_KEY_A] = Key::Held;
         states.states["Walking"].keys[GLFW_KEY_S] = Key::Held;
         states.states["Walking"].keys[GLFW_KEY_D] = Key::Held;
 
-        states.states["Idle"].animator.frames.push_back(new Sprite("assets\\character\\idle\\frame-1.png"));
-        states.states["Idle"].animator.frames.push_back(new Sprite("assets\\character\\idle\\frame-2.png"));
-        states.states["Idle"].animator.frames.push_back(new Sprite("assets\\character\\idle\\frame-3.png"));
-        states.states["Idle"].animator.frames.push_back(new Sprite("assets\\character\\idle\\frame-4.png"));
+        states.states["Idle"].animator.frames.emplace_back("assets\\character\\idle\\frame-1.png");
+        states.states["Idle"].animator.frames.emplace_back("assets\\character\\idle\\frame-2.png");
+        states.states["Idle"].animator.frames.emplace_back("assets\\character\\idle\\frame-3.png");
+        states.states["Idle"].animator.frames.emplace_back("assets\\character\\idle\\frame-4.png");
         states.states["Idle"].animator.data.duration = 0.2f;
-        states.states["Idle"].animator.data.update = aUpdate::Loop;
+        states.states["Idle"].animator.data.update = animUpdate::Loop;
 
-        states.states["Dash"].animator.frames.push_back(new Sprite("assets\\character\\dash\\frame-1.png"));
-        states.states["Dash"].animator.frames.push_back(new Sprite("assets\\character\\dash\\frame-2.png"));
-        states.states["Dash"].animator.frames.push_back(new Sprite("assets\\character\\dash\\frame-3.png"));
-        states.states["Dash"].animator.frames.push_back(new Sprite("assets\\character\\dash\\frame-4.png"));
-        states.states["Dash"].animator.frames.push_back(new Sprite("assets\\character\\dash\\frame-5.png"));
-        states.states["Dash"].animator.frames.push_back(new Sprite("assets\\character\\dash\\frame-6.png"));
-        states.states["Dash"].animator.frames.push_back(new Sprite("assets\\character\\dash\\frame-7.png"));
-        states.states["Dash"].animator.frames.push_back(new Sprite("assets\\character\\dash\\frame-8.png"));
-        states.states["Dash"].animator.frames.push_back(new Sprite("assets\\character\\dash\\frame-9.png"));
+        states.states["Dash"].animator.frames.emplace_back("assets\\character\\dash\\frame-1.png");
+        states.states["Dash"].animator.frames.emplace_back("assets\\character\\dash\\frame-2.png");
+        states.states["Dash"].animator.frames.emplace_back("assets\\character\\dash\\frame-3.png");
+        states.states["Dash"].animator.frames.emplace_back("assets\\character\\dash\\frame-4.png");
+        states.states["Dash"].animator.frames.emplace_back("assets\\character\\dash\\frame-5.png");
+        states.states["Dash"].animator.frames.emplace_back("assets\\character\\dash\\frame-6.png");
+        states.states["Dash"].animator.frames.emplace_back("assets\\character\\dash\\frame-7.png");
+        states.states["Dash"].animator.frames.emplace_back("assets\\character\\dash\\frame-8.png");
+        states.states["Dash"].animator.frames.emplace_back("assets\\character\\dash\\frame-9.png");
         states.states["Dash"].animator.data.duration = 0.04f;
-        states.states["Dash"].animator.data.update = aUpdate::Once;
+        states.states["Dash"].animator.data.update = animUpdate::Once;
         states.states["Dash"].keys[GLFW_KEY_LEFT_SHIFT] = Key::Pressed;
         
-        states.states["Attack"].animator.frames.push_back(new Sprite("assets\\character\\attack\\frame-1.png"));
-        states.states["Attack"].animator.frames.push_back(new Sprite("assets\\character\\attack\\frame-2.png"));
-        states.states["Attack"].animator.frames.push_back(new Sprite("assets\\character\\attack\\frame-3.png"));
-        states.states["Attack"].animator.frames.push_back(new Sprite("assets\\character\\attack\\frame-4.png"));
+        states.states["Attack"].animator.frames.emplace_back("assets\\character\\attack\\frame-1.png");
+        states.states["Attack"].animator.frames.emplace_back("assets\\character\\attack\\frame-2.png");
+        states.states["Attack"].animator.frames.emplace_back("assets\\character\\attack\\frame-3.png");
+        states.states["Attack"].animator.frames.emplace_back("assets\\character\\attack\\frame-4.png");
         states.states["Attack"].animator.data.duration = 0.1f;
-        states.states["Attack"].animator.data.update = aUpdate::Once;
+        states.states["Attack"].animator.data.update = animUpdate::Once;
         states.states["Attack"].mouse[GLFW_MOUSE_BUTTON_1] = Key::Pressed;
     
         coins = 0;
@@ -116,7 +116,7 @@ struct Character
     }
     inline void Draw(Window& window)
     {
-        states.Draw(position.x, position.y, 3.5f, window, direction, Vertical::Norm);
+        states.Draw(window, position.x, position.y, 3.5f, direction);
         window.DrawText(32, 35, "HEALTH:" + std::to_string(health), 2.0f, {255, 255, 255, 255});
         window.DrawText(32, 63, "COINS:" + std::to_string(coins), 2.0f, {255, 255, 255, 255});
     }
@@ -141,7 +141,7 @@ struct Character
 
 struct eDef
 {
-    std::unordered_map<std::string, std::vector<Sprite*>> animMap;
+    std::unordered_map<std::string, std::vector<Sprite>> animMap;
     float size, healthBarOffset;
 };
 
@@ -149,29 +149,29 @@ struct eGhostDef : eDef
 {
     eGhostDef()
     {
-        animMap["Attack"].push_back(new Sprite("assets\\enemy\\attack\\frame-1.png"));
-        animMap["Attack"].push_back(new Sprite("assets\\enemy\\attack\\frame-2.png"));
-        animMap["Attack"].push_back(new Sprite("assets\\enemy\\attack\\frame-3.png"));
-        animMap["Attack"].push_back(new Sprite("assets\\enemy\\attack\\frame-4.png"));
-        animMap["Attack"].push_back(new Sprite("assets\\enemy\\attack\\frame-5.png"));
-        animMap["Attack"].push_back(new Sprite("assets\\enemy\\attack\\frame-6.png"));
-        animMap["Attack"].push_back(new Sprite("assets\\enemy\\attack\\frame-7.png"));
-        animMap["Attack"].push_back(new Sprite("assets\\enemy\\attack\\frame-8.png"));
-        animMap["Attack"].push_back(new Sprite("assets\\enemy\\attack\\frame-9.png"));
-        animMap["Idle"].push_back(new Sprite("assets\\enemy\\idle\\frame-1.png"));
-        animMap["Idle"].push_back(new Sprite("assets\\enemy\\idle\\frame-2.png"));
-        animMap["Move"].push_back(new Sprite("assets\\enemy\\move\\frame-1.png"));
-        animMap["Move"].push_back(new Sprite("assets\\enemy\\move\\frame-2.png"));
-        animMap["Dead"].push_back(new Sprite("assets\\enemy\\dead\\frame-1.png"));
-        animMap["Dead"].push_back(new Sprite("assets\\enemy\\dead\\frame-2.png"));
-        animMap["Dead"].push_back(new Sprite("assets\\enemy\\dead\\frame-3.png"));
-        animMap["Dead"].push_back(new Sprite("assets\\enemy\\dead\\frame-4.png"));
-        animMap["Dead"].push_back(new Sprite("assets\\enemy\\dead\\frame-5.png"));
-        animMap["Dead"].push_back(new Sprite("assets\\enemy\\dead\\frame-6.png"));
-        animMap["Dead"].push_back(new Sprite("assets\\enemy\\dead\\frame-7.png"));
-        animMap["Dead"].push_back(new Sprite("assets\\enemy\\dead\\frame-8.png"));
-        animMap["Dead"].push_back(new Sprite("assets\\enemy\\dead\\frame-9.png"));
-        animMap["Dead"].push_back(new Sprite("assets\\enemy\\dead\\frame-10.png"));
+        animMap["Attack"].emplace_back("assets\\enemy\\attack\\frame-1.png");
+        animMap["Attack"].emplace_back("assets\\enemy\\attack\\frame-2.png");
+        animMap["Attack"].emplace_back("assets\\enemy\\attack\\frame-3.png");
+        animMap["Attack"].emplace_back("assets\\enemy\\attack\\frame-4.png");
+        animMap["Attack"].emplace_back("assets\\enemy\\attack\\frame-5.png");
+        animMap["Attack"].emplace_back("assets\\enemy\\attack\\frame-6.png");
+        animMap["Attack"].emplace_back("assets\\enemy\\attack\\frame-7.png");
+        animMap["Attack"].emplace_back("assets\\enemy\\attack\\frame-8.png");
+        animMap["Attack"].emplace_back("assets\\enemy\\attack\\frame-9.png");
+        animMap["Idle"].emplace_back("assets\\enemy\\idle\\frame-1.png");
+        animMap["Idle"].emplace_back("assets\\enemy\\idle\\frame-2.png");
+        animMap["Move"].emplace_back("assets\\enemy\\move\\frame-1.png");
+        animMap["Move"].emplace_back("assets\\enemy\\move\\frame-2.png");
+        animMap["Dead"].emplace_back("assets\\enemy\\dead\\frame-1.png");
+        animMap["Dead"].emplace_back("assets\\enemy\\dead\\frame-2.png");
+        animMap["Dead"].emplace_back("assets\\enemy\\dead\\frame-3.png");
+        animMap["Dead"].emplace_back("assets\\enemy\\dead\\frame-4.png");
+        animMap["Dead"].emplace_back("assets\\enemy\\dead\\frame-5.png");
+        animMap["Dead"].emplace_back("assets\\enemy\\dead\\frame-6.png");
+        animMap["Dead"].emplace_back("assets\\enemy\\dead\\frame-7.png");
+        animMap["Dead"].emplace_back("assets\\enemy\\dead\\frame-8.png");
+        animMap["Dead"].emplace_back("assets\\enemy\\dead\\frame-9.png");
+        animMap["Dead"].emplace_back("assets\\enemy\\dead\\frame-10.png");
         healthBarOffset = 100.0f;
         size = 4.5f;
     }
@@ -181,24 +181,24 @@ struct eRangedDef : eDef
 {
     eRangedDef()
     {
-        animMap["Attack"].push_back(new Sprite("assets\\ranged-enemy\\attack\\frame-0.png"));
-        animMap["Attack"].push_back(new Sprite("assets\\ranged-enemy\\attack\\frame-1.png"));
-        animMap["Attack"].push_back(new Sprite("assets\\ranged-enemy\\attack\\frame-2.png"));
-        animMap["Idle"].push_back(new Sprite("assets\\ranged-enemy\\idle\\frame-1.png"));
-        animMap["Idle"].push_back(new Sprite("assets\\ranged-enemy\\idle\\frame-2.png"));
-        animMap["Dead"].push_back(new Sprite("assets\\ranged-enemy\\dead\\frame-0.png"));
-        animMap["Dead"].push_back(new Sprite("assets\\ranged-enemy\\dead\\frame-1.png"));
-        animMap["Dead"].push_back(new Sprite("assets\\ranged-enemy\\dead\\frame-2.png"));
-        animMap["Dead"].push_back(new Sprite("assets\\ranged-enemy\\dead\\frame-3.png"));
-        animMap["Dead"].push_back(new Sprite("assets\\ranged-enemy\\dead\\frame-4.png"));
-        animMap["Dead"].push_back(new Sprite("assets\\ranged-enemy\\dead\\frame-5.png"));
-        animMap["Spawn"].push_back(new Sprite("assets\\ranged-enemy\\spawn\\frame-0.png"));
-        animMap["Spawn"].push_back(new Sprite("assets\\ranged-enemy\\spawn\\frame-1.png"));
-        animMap["Spawn"].push_back(new Sprite("assets\\ranged-enemy\\spawn\\frame-2.png"));
-        animMap["Spawn"].push_back(new Sprite("assets\\ranged-enemy\\spawn\\frame-3.png"));
-        animMap["Spawn"].push_back(new Sprite("assets\\ranged-enemy\\spawn\\frame-4.png"));
-        animMap["Spawn"].push_back(new Sprite("assets\\ranged-enemy\\spawn\\frame-5.png"));
-        animMap["Energy"].push_back(new Sprite("assets\\ranged-enemy\\energy-ball.png"));
+        animMap["Attack"].emplace_back("assets\\ranged-enemy\\attack\\frame-0.png");
+        animMap["Attack"].emplace_back("assets\\ranged-enemy\\attack\\frame-1.png");
+        animMap["Attack"].emplace_back("assets\\ranged-enemy\\attack\\frame-2.png");
+        animMap["Idle"].emplace_back("assets\\ranged-enemy\\idle\\frame-1.png");
+        animMap["Idle"].emplace_back("assets\\ranged-enemy\\idle\\frame-2.png");
+        animMap["Dead"].emplace_back("assets\\ranged-enemy\\dead\\frame-0.png");
+        animMap["Dead"].emplace_back("assets\\ranged-enemy\\dead\\frame-1.png");
+        animMap["Dead"].emplace_back("assets\\ranged-enemy\\dead\\frame-2.png");
+        animMap["Dead"].emplace_back("assets\\ranged-enemy\\dead\\frame-3.png");
+        animMap["Dead"].emplace_back("assets\\ranged-enemy\\dead\\frame-4.png");
+        animMap["Dead"].emplace_back("assets\\ranged-enemy\\dead\\frame-5.png");
+        animMap["Spawn"].emplace_back("assets\\ranged-enemy\\spawn\\frame-0.png");
+        animMap["Spawn"].emplace_back("assets\\ranged-enemy\\spawn\\frame-1.png");
+        animMap["Spawn"].emplace_back("assets\\ranged-enemy\\spawn\\frame-2.png");
+        animMap["Spawn"].emplace_back("assets\\ranged-enemy\\spawn\\frame-3.png");
+        animMap["Spawn"].emplace_back("assets\\ranged-enemy\\spawn\\frame-4.png");
+        animMap["Spawn"].emplace_back("assets\\ranged-enemy\\spawn\\frame-5.png");
+        animMap["Energy"].emplace_back("assets\\ranged-enemy\\energy-ball.png");
         healthBarOffset = 80.0f;
         size = 3.5f;
     }
@@ -225,7 +225,7 @@ inline void DrawHealth(float x, float y, Window& window, float width, float heig
 
 struct eCommon
 {
-    std::unordered_map<std::string, aData> states;
+    std::unordered_map<std::string, animData> states;
     Horizontal direction = Horizontal::Norm;
     std::string currentState;
     float health = 100.0f;
@@ -237,7 +237,7 @@ struct eCommon
     virtual void SetSpawnData(v2f position) = 0;
     inline void DrawSelf(eDef* def, Window& window, float deltaTime)
     {
-        window.DrawSprite(position.x, position.y, *def->animMap[currentState][states[currentState].index], def->size, direction);
+        window.DrawSprite(position.x, position.y, def->animMap[currentState][states[currentState].index], def->size, direction);
         DrawHealth(position.x, position.y - def->healthBarOffset, window, 50.0f, 10.0f, health);
     }
     inline void UpdateSelf(Character& character, eDef* def, float deltaTime)
@@ -253,7 +253,7 @@ struct eCommon
     }
     inline void SetState(eDef* def, std::string state)
     {
-        if(states[currentState].update == aUpdate::Once)
+        if(states[currentState].update == animUpdate::Once)
         {
             if(states[currentState].played)
             {
@@ -272,7 +272,7 @@ set:
         currentState = state;
         return;
     }
-    inline void DefineState(const std::string& name, const aUpdate& update, const float duration)
+    inline void DefineState(const std::string& name, const animUpdate& update, const float duration)
     {
         if(states.count(name) != 0) return;
         states[name].duration = duration;
@@ -293,10 +293,10 @@ struct eGhost : eCommon
     eGhost()
     {
         type = eType::Ghost;
-        DefineState("Idle", aUpdate::Loop, 0.2f);
-        DefineState("Attack", aUpdate::Once, 0.2f);
-        DefineState("Move", aUpdate::Loop, 0.2f);
-        DefineState("Dead", aUpdate::Once, 0.2f);
+        DefineState("Idle", animUpdate::Loop, 0.2f);
+        DefineState("Attack", animUpdate::Once, 0.2f);
+        DefineState("Move", animUpdate::Loop, 0.2f);
+        DefineState("Dead", animUpdate::Once, 0.2f);
         currentState = "Idle";
     }
     inline void Update(eDef* def, Character& character, float deltaTime) override
@@ -351,10 +351,10 @@ struct eRanged : eCommon
     {
         type = eType::Ranged;
         timeSinceAttack = 0.0f;
-        DefineState("Idle", aUpdate::Loop, 0.2f);
-        DefineState("Spawn", aUpdate::Once, 0.2f);
-        DefineState("Attack", aUpdate::Once, 0.2f);
-        DefineState("Dead", aUpdate::Once, 0.2f);
+        DefineState("Idle", animUpdate::Loop, 0.2f);
+        DefineState("Spawn", animUpdate::Once, 0.2f);
+        DefineState("Attack", animUpdate::Once, 0.2f);
+        DefineState("Dead", animUpdate::Once, 0.2f);
         currentState = "Spawn";
         ball.remove = true;
     }
@@ -396,7 +396,7 @@ struct eRanged : eCommon
     }
     inline void DrawEnergyBall(Window& window, eDef* def) 
     {
-        if(!ball.remove) window.DrawSprite(ball.position.x, ball.position.y, *def->animMap["Energy"][0], 5.0f);
+        if(!ball.remove) window.DrawSprite(ball.position.x, ball.position.y, def->animMap["Energy"][0], 5.0f);
     }
     inline void UpdateEnergyBall(Character& character, float deltaTime)
     {
@@ -537,7 +537,7 @@ struct eWaves
 
 struct pChest
 {
-    std::unordered_map<pPowerupType, Sprite*> powerups;
+    std::unordered_map<pPowerupType, Sprite> powerups;
     v2f position = v2f(900.0f, 170.0f);
     Animator animator;
     float elapsedTime;
@@ -549,14 +549,14 @@ struct pChest
     } cUpdateType = cUpdate::Closed;
     pChest()
     {
-        animator.frames.push_back(new Sprite("assets\\chest\\frames\\frame-0.png"));
-        animator.frames.push_back(new Sprite("assets\\chest\\frames\\frame-1.png"));
-        animator.frames.push_back(new Sprite("assets\\chest\\frames\\frame-2.png"));
-        powerups[pPowerupType::Health] = new Sprite("assets\\chest\\powerups\\health.png");
-        powerups[pPowerupType::Speed] = new Sprite("assets\\chest\\powerups\\fast-run.png");
-        powerups[pPowerupType::Shield] = new Sprite("assets\\chest\\powerups\\shield.png");
-        powerups[pPowerupType::Money] = new Sprite("assets\\chest\\powerups\\money-icon.png");
-        animator.data.update = aUpdate::Once;
+        animator.frames.emplace_back("assets\\chest\\frames\\frame-0.png");
+        animator.frames.emplace_back("assets\\chest\\frames\\frame-1.png");
+        animator.frames.emplace_back("assets\\chest\\frames\\frame-2.png");
+        powerups[pPowerupType::Health] = Sprite("assets\\chest\\powerups\\health.png");
+        powerups[pPowerupType::Speed] = Sprite("assets\\chest\\powerups\\fast-run.png");
+        powerups[pPowerupType::Shield] = Sprite("assets\\chest\\powerups\\shield.png");
+        powerups[pPowerupType::Money] = Sprite("assets\\chest\\powerups\\money-icon.png");
+        animator.data.update = animUpdate::Once;
         animator.data.duration = 0.2f;
         animator.data.Reverse(true);
         elapsedTime = 5.0f;
@@ -573,14 +573,14 @@ struct pChest
     {
         if(character.currPowerup == pPowerupType::None) return;
         float y = position.y - std::clamp(elapsedTime, 0.0f, 4.0f) * 10.0f;
-        window.DrawSprite(position.x, y, *powerups[character.currPowerup], 3.0f);
+        window.DrawSprite(position.x, y, powerups[character.currPowerup], 3.0f);
     }
     inline void Draw(Character& character, Window& window, float deltaTime)
     {
         if(cUpdateType == cUpdate::Closed && Distance(character.position, position) < 100.0f && elapsedTime > 5.0f)
             window.DrawText(position.x - 100.0f, position.y - 60.0f, "Press E to open.", 1.5f, {255, 255, 255, 255});
         
-        animator.Draw(position.x, position.y, 6.0f, window, Horizontal::Norm, Vertical::Norm);
+        window.DrawSprite(position.x, position.y, animator.GetCurrFrame(), 6.0f);
         
         DrawPowerup(character, window, deltaTime);
     }
