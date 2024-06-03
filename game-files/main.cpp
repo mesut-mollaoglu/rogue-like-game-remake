@@ -17,10 +17,10 @@ class Game
 {
 private:
     Character character;
-    eWaves waveController;
+    WaveSystem waveController;
     Decal mapSprite;
-    pChest chest;
-    pSystem ps;
+    Chest chest;
+    ParticleSystem ps;
     DataNode config;
     MenuManager menuManager;
     Gamestate currGameState = Gamestate::MainMenu;
@@ -38,8 +38,6 @@ public:
         srand(time(0));
 
         batch = SpriteBatch(&window);
-
-        ps = pSystem(0, 0);
 
         Deserialize(config, "datafile.txt");
 
@@ -59,7 +57,7 @@ public:
         menu.size = 4.0f;
         menu.BuildMenu();
 
-        market.position = window.GetScrSize() * 0.5f;
+        market.pos = window.GetScrSize() * 0.5f;
         market.size = 5.0f;
         market.Deserialize(config);
 

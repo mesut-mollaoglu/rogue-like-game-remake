@@ -13,7 +13,7 @@ inline float Distance(v2f v1, v2f v2)
     return (v1 - v2).mag();
 }
 
-enum class pPowerupType
+enum class PowerupType
 {
     Speed,
     Health,
@@ -22,101 +22,101 @@ enum class pPowerupType
     None
 };
 
-inline bool InBounds(v2f position, rect rc)
+inline bool InBounds(v2f pos, rect rc)
 {
-    return position.x < rc.ex && position.x > rc.sx && position.y < rc.ey && position.y > rc.sx;
+    return pos.x < rc.ex && pos.x > rc.sx && pos.y < rc.ey && pos.y > rc.sx;
 }
 
 struct Character
 {
-    pPowerupType currPowerup = pPowerupType::None;
+    PowerupType currPowerup = PowerupType::None;
     float velocity = 150.0f;
     int health, maxHealth;
     int coins, coinMultiplier;
-    v2f position;
+    v2f pos;
     Horizontal direction;
-    StateMachine states;
+    StateMachine stateMachine;
     Character()
     {
         direction = Horizontal::Norm;
-        states.currentState = "Idle";
+        stateMachine.currState = "Idle";
 
-        states.states["Walking"].animator.frames.emplace_back("assets\\character\\move\\frame-1.png");
-        states.states["Walking"].animator.frames.emplace_back("assets\\character\\move\\frame-2.png");
-        states.states["Walking"].animator.frames.emplace_back("assets\\character\\move\\frame-3.png");
-        states.states["Walking"].animator.frames.emplace_back("assets\\character\\move\\frame-4.png");
-        states.states["Walking"].animator.data.duration = 0.2f;
-        states.states["Walking"].animator.data.update = animUpdate::Loop;
-        states.states["Walking"].keys[GLFW_KEY_W] = Key::Held;
-        states.states["Walking"].keys[GLFW_KEY_A] = Key::Held;
-        states.states["Walking"].keys[GLFW_KEY_S] = Key::Held;
-        states.states["Walking"].keys[GLFW_KEY_D] = Key::Held;
+        stateMachine["Walking"].animator.AddFrame("assets\\character\\move\\frame-1.png");
+        stateMachine["Walking"].animator.AddFrame("assets\\character\\move\\frame-2.png");
+        stateMachine["Walking"].animator.AddFrame("assets\\character\\move\\frame-3.png");
+        stateMachine["Walking"].animator.AddFrame("assets\\character\\move\\frame-4.png");
+        stateMachine["Walking"].animator.data.duration = 0.2f;
+        stateMachine["Walking"].animator.data.update = AnimUpdate::Loop;
+        stateMachine["Walking"].keys[GLFW_KEY_W] = Key::Held;
+        stateMachine["Walking"].keys[GLFW_KEY_A] = Key::Held;
+        stateMachine["Walking"].keys[GLFW_KEY_S] = Key::Held;
+        stateMachine["Walking"].keys[GLFW_KEY_D] = Key::Held;
 
-        states.states["Idle"].animator.frames.emplace_back("assets\\character\\idle\\frame-1.png");
-        states.states["Idle"].animator.frames.emplace_back("assets\\character\\idle\\frame-2.png");
-        states.states["Idle"].animator.frames.emplace_back("assets\\character\\idle\\frame-3.png");
-        states.states["Idle"].animator.frames.emplace_back("assets\\character\\idle\\frame-4.png");
-        states.states["Idle"].animator.data.duration = 0.2f;
-        states.states["Idle"].animator.data.update = animUpdate::Loop;
+        stateMachine["Idle"].animator.AddFrame("assets\\character\\idle\\frame-1.png");
+        stateMachine["Idle"].animator.AddFrame("assets\\character\\idle\\frame-2.png");
+        stateMachine["Idle"].animator.AddFrame("assets\\character\\idle\\frame-3.png");
+        stateMachine["Idle"].animator.AddFrame("assets\\character\\idle\\frame-4.png");
+        stateMachine["Idle"].animator.data.duration = 0.2f;
+        stateMachine["Idle"].animator.data.update = AnimUpdate::Loop;
 
-        states.states["Dash"].animator.frames.emplace_back("assets\\character\\dash\\frame-1.png");
-        states.states["Dash"].animator.frames.emplace_back("assets\\character\\dash\\frame-2.png");
-        states.states["Dash"].animator.frames.emplace_back("assets\\character\\dash\\frame-3.png");
-        states.states["Dash"].animator.frames.emplace_back("assets\\character\\dash\\frame-4.png");
-        states.states["Dash"].animator.frames.emplace_back("assets\\character\\dash\\frame-5.png");
-        states.states["Dash"].animator.frames.emplace_back("assets\\character\\dash\\frame-6.png");
-        states.states["Dash"].animator.frames.emplace_back("assets\\character\\dash\\frame-7.png");
-        states.states["Dash"].animator.frames.emplace_back("assets\\character\\dash\\frame-8.png");
-        states.states["Dash"].animator.frames.emplace_back("assets\\character\\dash\\frame-9.png");
-        states.states["Dash"].animator.data.duration = 0.04f;
-        states.states["Dash"].animator.data.update = animUpdate::Once;
-        states.states["Dash"].keys[GLFW_KEY_LEFT_SHIFT] = Key::Pressed;
+        stateMachine["Dash"].animator.AddFrame("assets\\character\\dash\\frame-1.png");
+        stateMachine["Dash"].animator.AddFrame("assets\\character\\dash\\frame-2.png");
+        stateMachine["Dash"].animator.AddFrame("assets\\character\\dash\\frame-3.png");
+        stateMachine["Dash"].animator.AddFrame("assets\\character\\dash\\frame-4.png");
+        stateMachine["Dash"].animator.AddFrame("assets\\character\\dash\\frame-5.png");
+        stateMachine["Dash"].animator.AddFrame("assets\\character\\dash\\frame-6.png");
+        stateMachine["Dash"].animator.AddFrame("assets\\character\\dash\\frame-7.png");
+        stateMachine["Dash"].animator.AddFrame("assets\\character\\dash\\frame-8.png");
+        stateMachine["Dash"].animator.AddFrame("assets\\character\\dash\\frame-9.png");
+        stateMachine["Dash"].animator.data.duration = 0.04f;
+        stateMachine["Dash"].animator.data.update = AnimUpdate::Once;
+        stateMachine["Dash"].keys[GLFW_KEY_LEFT_SHIFT] = Key::Pressed;
         
-        states.states["Attack"].animator.frames.emplace_back("assets\\character\\attack\\frame-1.png");
-        states.states["Attack"].animator.frames.emplace_back("assets\\character\\attack\\frame-2.png");
-        states.states["Attack"].animator.frames.emplace_back("assets\\character\\attack\\frame-3.png");
-        states.states["Attack"].animator.frames.emplace_back("assets\\character\\attack\\frame-4.png");
-        states.states["Attack"].animator.data.duration = 0.1f;
-        states.states["Attack"].animator.data.update = animUpdate::Once;
-        states.states["Attack"].mouse[GLFW_MOUSE_BUTTON_1] = Key::Pressed;
+        stateMachine["Attack"].animator.AddFrame("assets\\character\\attack\\frame-1.png");
+        stateMachine["Attack"].animator.AddFrame("assets\\character\\attack\\frame-2.png");
+        stateMachine["Attack"].animator.AddFrame("assets\\character\\attack\\frame-3.png");
+        stateMachine["Attack"].animator.AddFrame("assets\\character\\attack\\frame-4.png");
+        stateMachine["Attack"].animator.data.duration = 0.1f;
+        stateMachine["Attack"].animator.data.update = AnimUpdate::Once;
+        stateMachine["Attack"].mouse[GLFW_MOUSE_BUTTON_1] = Key::Pressed;
     
         coins = 0;
     }
     inline void Movement(Window& window, float deltaTime, float speed)
     {
-        if(currPowerup == pPowerupType::Speed) speed *= 2.0f;
-        if(window.GetKey(GLFW_KEY_W) == Key::Held) position.y -= speed * deltaTime;
-        if(window.GetKey(GLFW_KEY_S) == Key::Held) position.y += speed * deltaTime;
+        if(currPowerup == PowerupType::Speed) speed *= 2.0f;
+        if(window.GetKey(GLFW_KEY_W) == Key::Held) pos.y -= speed * deltaTime;
+        if(window.GetKey(GLFW_KEY_S) == Key::Held) pos.y += speed * deltaTime;
         if(window.GetKey(GLFW_KEY_A) == Key::Held) 
         {
-            position.x -= speed * deltaTime;
+            pos.x -= speed * deltaTime;
             if(direction == Horizontal::Norm) direction = Horizontal::Flip;
         }
         if(window.GetKey(GLFW_KEY_D) == Key::Held) 
         {
-            position.x += speed * deltaTime;
+            pos.x += speed * deltaTime;
             if(direction == Horizontal::Flip) direction = Horizontal::Norm;
         }
-        if(position.x < mapBound.sx) position.x += speed * deltaTime;
-        if(position.x > mapBound.ex) position.x -= speed * deltaTime;
-        if(position.y < mapBound.sy) position.y += speed * deltaTime;
-        if(position.y > mapBound.ey) position.y -= speed * deltaTime;
+        if(pos.x < mapBound.sx) pos.x += speed * deltaTime;
+        if(pos.x > mapBound.ex) pos.x -= speed * deltaTime;
+        if(pos.y < mapBound.sy) pos.y += speed * deltaTime;
+        if(pos.y > mapBound.ey) pos.y -= speed * deltaTime;
     }
     inline void Dash(Window& window, float deltaTime)
     {
         float dx = 600.0f * deltaTime * (direction == Horizontal::Flip ? -1 : 1);
-        if((position.x + dx) > mapBound.sx && (position.x + dx) < mapBound.ex) position.x += dx;
+        if((pos.x + dx) > mapBound.sx && (pos.x + dx) < mapBound.ex) pos.x += dx;
     }
     inline void Update(Window& window, float deltaTime)
     {
-        if(currPowerup == pPowerupType::Health) health = maxHealth;
-        if(states.currentState == "Walking") Movement(window, deltaTime, velocity);
-        else if(states.currentState == "Dash") Dash(window, deltaTime);
-        states.Update(window, deltaTime);
+        if(currPowerup == PowerupType::Health) health = maxHealth;
+        if(stateMachine.currState == "Walking") Movement(window, deltaTime, velocity);
+        else if(stateMachine.currState == "Dash") Dash(window, deltaTime);
+        stateMachine.Update(window, deltaTime);
     }
     inline void Draw(Window& window)
     {
-        states.Draw(window, position.x, position.y, 3.5f, direction);
+        stateMachine.Draw(window, pos.x, pos.y, 3.5f, direction);
         window.DrawText(32, 35, "HEALTH:" + std::to_string(health), 2.0f, {255, 255, 255, 255});
         window.DrawText(32, 63, "COINS:" + std::to_string(coins), 2.0f, {255, 255, 255, 255});
     }
@@ -130,81 +130,81 @@ struct Character
     }
     inline void SetDefault()
     {
-        position = 200.0f;
+        pos = 200.0f;
         health = maxHealth;
-        states.currentState = "Idle";
+        stateMachine.currState = "Idle";
         direction = Horizontal::Norm;
-        currPowerup = pPowerupType::None;
+        currPowerup = PowerupType::None;
     }
     ~Character() {}
 };
 
-struct eDef
+struct EnemyDef
 {
-    std::unordered_map<std::string, std::vector<Sprite>> animMap;
+    EntityDef enemyDef;
     float size, healthBarOffset;
 };
 
-struct eGhostDef : eDef
+struct eGhostDef : EnemyDef
 {
     eGhostDef()
     {
-        animMap["Attack"].emplace_back("assets\\enemy\\attack\\frame-1.png");
-        animMap["Attack"].emplace_back("assets\\enemy\\attack\\frame-2.png");
-        animMap["Attack"].emplace_back("assets\\enemy\\attack\\frame-3.png");
-        animMap["Attack"].emplace_back("assets\\enemy\\attack\\frame-4.png");
-        animMap["Attack"].emplace_back("assets\\enemy\\attack\\frame-5.png");
-        animMap["Attack"].emplace_back("assets\\enemy\\attack\\frame-6.png");
-        animMap["Attack"].emplace_back("assets\\enemy\\attack\\frame-7.png");
-        animMap["Attack"].emplace_back("assets\\enemy\\attack\\frame-8.png");
-        animMap["Attack"].emplace_back("assets\\enemy\\attack\\frame-9.png");
-        animMap["Idle"].emplace_back("assets\\enemy\\idle\\frame-1.png");
-        animMap["Idle"].emplace_back("assets\\enemy\\idle\\frame-2.png");
-        animMap["Move"].emplace_back("assets\\enemy\\move\\frame-1.png");
-        animMap["Move"].emplace_back("assets\\enemy\\move\\frame-2.png");
-        animMap["Dead"].emplace_back("assets\\enemy\\dead\\frame-1.png");
-        animMap["Dead"].emplace_back("assets\\enemy\\dead\\frame-2.png");
-        animMap["Dead"].emplace_back("assets\\enemy\\dead\\frame-3.png");
-        animMap["Dead"].emplace_back("assets\\enemy\\dead\\frame-4.png");
-        animMap["Dead"].emplace_back("assets\\enemy\\dead\\frame-5.png");
-        animMap["Dead"].emplace_back("assets\\enemy\\dead\\frame-6.png");
-        animMap["Dead"].emplace_back("assets\\enemy\\dead\\frame-7.png");
-        animMap["Dead"].emplace_back("assets\\enemy\\dead\\frame-8.png");
-        animMap["Dead"].emplace_back("assets\\enemy\\dead\\frame-9.png");
-        animMap["Dead"].emplace_back("assets\\enemy\\dead\\frame-10.png");
+        enemyDef["Attack"].AddFrame("assets\\enemy\\attack\\frame-1.png");
+        enemyDef["Attack"].AddFrame("assets\\enemy\\attack\\frame-2.png");
+        enemyDef["Attack"].AddFrame("assets\\enemy\\attack\\frame-3.png");
+        enemyDef["Attack"].AddFrame("assets\\enemy\\attack\\frame-4.png");
+        enemyDef["Attack"].AddFrame("assets\\enemy\\attack\\frame-5.png");
+        enemyDef["Attack"].AddFrame("assets\\enemy\\attack\\frame-6.png");
+        enemyDef["Attack"].AddFrame("assets\\enemy\\attack\\frame-7.png");
+        enemyDef["Attack"].AddFrame("assets\\enemy\\attack\\frame-8.png");
+        enemyDef["Attack"].AddFrame("assets\\enemy\\attack\\frame-9.png");
+        enemyDef["Idle"].AddFrame("assets\\enemy\\idle\\frame-1.png");
+        enemyDef["Idle"].AddFrame("assets\\enemy\\idle\\frame-2.png");
+        enemyDef["Move"].AddFrame("assets\\enemy\\move\\frame-1.png");
+        enemyDef["Move"].AddFrame("assets\\enemy\\move\\frame-2.png");
+        enemyDef["Dead"].AddFrame("assets\\enemy\\dead\\frame-1.png");
+        enemyDef["Dead"].AddFrame("assets\\enemy\\dead\\frame-2.png");
+        enemyDef["Dead"].AddFrame("assets\\enemy\\dead\\frame-3.png");
+        enemyDef["Dead"].AddFrame("assets\\enemy\\dead\\frame-4.png");
+        enemyDef["Dead"].AddFrame("assets\\enemy\\dead\\frame-5.png");
+        enemyDef["Dead"].AddFrame("assets\\enemy\\dead\\frame-6.png");
+        enemyDef["Dead"].AddFrame("assets\\enemy\\dead\\frame-7.png");
+        enemyDef["Dead"].AddFrame("assets\\enemy\\dead\\frame-8.png");
+        enemyDef["Dead"].AddFrame("assets\\enemy\\dead\\frame-9.png");
+        enemyDef["Dead"].AddFrame("assets\\enemy\\dead\\frame-10.png");
         healthBarOffset = 100.0f;
         size = 4.5f;
     }
 };
 
-struct eRangedDef : eDef
+struct eRangedDef : EnemyDef
 {
     eRangedDef()
     {
-        animMap["Attack"].emplace_back("assets\\ranged-enemy\\attack\\frame-0.png");
-        animMap["Attack"].emplace_back("assets\\ranged-enemy\\attack\\frame-1.png");
-        animMap["Attack"].emplace_back("assets\\ranged-enemy\\attack\\frame-2.png");
-        animMap["Idle"].emplace_back("assets\\ranged-enemy\\idle\\frame-1.png");
-        animMap["Idle"].emplace_back("assets\\ranged-enemy\\idle\\frame-2.png");
-        animMap["Dead"].emplace_back("assets\\ranged-enemy\\dead\\frame-0.png");
-        animMap["Dead"].emplace_back("assets\\ranged-enemy\\dead\\frame-1.png");
-        animMap["Dead"].emplace_back("assets\\ranged-enemy\\dead\\frame-2.png");
-        animMap["Dead"].emplace_back("assets\\ranged-enemy\\dead\\frame-3.png");
-        animMap["Dead"].emplace_back("assets\\ranged-enemy\\dead\\frame-4.png");
-        animMap["Dead"].emplace_back("assets\\ranged-enemy\\dead\\frame-5.png");
-        animMap["Spawn"].emplace_back("assets\\ranged-enemy\\spawn\\frame-0.png");
-        animMap["Spawn"].emplace_back("assets\\ranged-enemy\\spawn\\frame-1.png");
-        animMap["Spawn"].emplace_back("assets\\ranged-enemy\\spawn\\frame-2.png");
-        animMap["Spawn"].emplace_back("assets\\ranged-enemy\\spawn\\frame-3.png");
-        animMap["Spawn"].emplace_back("assets\\ranged-enemy\\spawn\\frame-4.png");
-        animMap["Spawn"].emplace_back("assets\\ranged-enemy\\spawn\\frame-5.png");
-        animMap["Energy"].emplace_back("assets\\ranged-enemy\\energy-ball.png");
+        enemyDef["Attack"].AddFrame("assets\\ranged-enemy\\attack\\frame-0.png");
+        enemyDef["Attack"].AddFrame("assets\\ranged-enemy\\attack\\frame-1.png");
+        enemyDef["Attack"].AddFrame("assets\\ranged-enemy\\attack\\frame-2.png");
+        enemyDef["Idle"].AddFrame("assets\\ranged-enemy\\idle\\frame-1.png");
+        enemyDef["Idle"].AddFrame("assets\\ranged-enemy\\idle\\frame-2.png");
+        enemyDef["Dead"].AddFrame("assets\\ranged-enemy\\dead\\frame-0.png");
+        enemyDef["Dead"].AddFrame("assets\\ranged-enemy\\dead\\frame-1.png");
+        enemyDef["Dead"].AddFrame("assets\\ranged-enemy\\dead\\frame-2.png");
+        enemyDef["Dead"].AddFrame("assets\\ranged-enemy\\dead\\frame-3.png");
+        enemyDef["Dead"].AddFrame("assets\\ranged-enemy\\dead\\frame-4.png");
+        enemyDef["Dead"].AddFrame("assets\\ranged-enemy\\dead\\frame-5.png");
+        enemyDef["Spawn"].AddFrame("assets\\ranged-enemy\\spawn\\frame-0.png");
+        enemyDef["Spawn"].AddFrame("assets\\ranged-enemy\\spawn\\frame-1.png");
+        enemyDef["Spawn"].AddFrame("assets\\ranged-enemy\\spawn\\frame-2.png");
+        enemyDef["Spawn"].AddFrame("assets\\ranged-enemy\\spawn\\frame-3.png");
+        enemyDef["Spawn"].AddFrame("assets\\ranged-enemy\\spawn\\frame-4.png");
+        enemyDef["Spawn"].AddFrame("assets\\ranged-enemy\\spawn\\frame-5.png");
+        enemyDef["Energy"].AddFrame("assets\\ranged-enemy\\energy-ball.png");
         healthBarOffset = 80.0f;
         size = 3.5f;
     }
 };
 
-enum class eType : uint8_t
+enum class EnemyType : uint8_t
 {
     Ghost,
     Ranged
@@ -223,225 +223,199 @@ inline void DrawHealth(float x, float y, Window& window, float width, float heig
     window.DrawRect(x - width * 0.5f, y - height * 0.5f, x + finalWidth - width * 0.5f, y + height * 0.5f, {255, 255, 255, 255});
 }
 
-struct eCommon
+std::unordered_map<EnemyType, EnemyDef*> defMap
 {
-    std::unordered_map<std::string, animData> states;
+    {EnemyType::Ghost, new eGhostDef()},
+    {EnemyType::Ranged, new eRangedDef()}
+};
+
+struct EnemyBase
+{
+    EntityStateMachine stateMachine;
     Horizontal direction = Horizontal::Norm;
-    std::string currentState;
     float health = 100.0f;
-    v2f position = 0.0f;
-    eType type;
-    virtual void Update(eDef* def, Character& character, float deltaTime) = 0;
-    virtual void Draw(eDef* def, Window& window, float deltaTime) = 0;
+    v2f pos = 0.0f;
+    EnemyType type;
+    virtual void Update(Character& character, float deltaTime) = 0;
+    virtual void Draw(Window& window, float deltaTime) = 0;
     virtual void GiveDamage(Character& character, float deltaTime) = 0;
-    virtual void SetSpawnData(v2f position) = 0;
-    inline void DrawSelf(eDef* def, Window& window, float deltaTime)
+    virtual void SetSpawnData(const v2f& pos) = 0;
+    inline void DrawSelf(Window& window, float deltaTime)
     {
-        window.DrawSprite(position.x, position.y, def->animMap[currentState][states[currentState].index], def->size, direction);
-        DrawHealth(position.x, position.y - def->healthBarOffset, window, 50.0f, 10.0f, health);
+        stateMachine.Draw(window, pos.x, pos.y, defMap.at(type)->size, direction);
+        DrawHealth(pos.x, pos.y - defMap.at(type)->healthBarOffset, window, 50.0f, 10.0f, health);
     }
-    inline void UpdateSelf(Character& character, eDef* def, float deltaTime)
+    inline void UpdateSelf(Character& character, float deltaTime)
     {
         TakeDamage(character, deltaTime);
-        if(health <= 0.0f) SetState(def, "Dead");
-        const std::size_t size = def->animMap[currentState].size();
-        states[currentState].Update(size, deltaTime);
+        if(health <= 0.0f) stateMachine.SetState("Dead");
+        stateMachine.Update(deltaTime);
     }
     inline float GetDistance(Character& character)
     {
-        return Distance(character.position, position);
-    }
-    inline void SetState(eDef* def, std::string state)
-    {
-        if(states[currentState].update == animUpdate::Once)
-        {
-            if(states[currentState].played)
-            {
-                state = "Idle";
-                goto set;
-            }
-            else return;
-        }
-set:
-        if(currentState == state || states.count(state) == 0) return;
-        auto& data = states[currentState];
-        const std::size_t size = def->animMap[currentState].size() - 1;
-        data.totalTime = (data.reverse ? data.duration * size : 0.0f);
-        data.index = (data.reverse ? size : 0);
-        data.played = false;
-        currentState = state;
-        return;
-    }
-    inline void DefineState(const std::string& name, const animUpdate& update, const float duration)
-    {
-        if(states.count(name) != 0) return;
-        states[name].duration = duration;
-        states[name].update = update;
+        return Distance(character.pos, pos);
     }
     inline void TakeDamage(Character& character, float deltaTime)
     {
         if(GetDistance(character) < 100.0f)
         {
-            if(character.states.currentState == "Attack") health -= 10.0f * deltaTime;
-            else if(character.states.currentState == "Dash") health = 0.0f;
+            if(character.stateMachine.currState == "Attack") health -= 10.0f * deltaTime;
+            else if(character.stateMachine.currState == "Dash") health = 0.0f;
         }
     }
 };
 
-struct eGhost : eCommon
+struct Ghost : EnemyBase
 {
-    eGhost()
+    Ghost()
     {
-        type = eType::Ghost;
-        DefineState("Idle", animUpdate::Loop, 0.2f);
-        DefineState("Attack", animUpdate::Once, 0.2f);
-        DefineState("Move", animUpdate::Loop, 0.2f);
-        DefineState("Dead", animUpdate::Once, 0.2f);
-        currentState = "Idle";
+        type = EnemyType::Ghost;
+        stateMachine.DefineState("Idle", AnimUpdate::Loop, 0.2f);
+        stateMachine.DefineState("Attack", AnimUpdate::Once, 0.2f);
+        stateMachine.DefineState("Move", AnimUpdate::Loop, 0.2f);
+        stateMachine.DefineState("Dead", AnimUpdate::Once, 0.2f);
+        stateMachine.def = &defMap.at(type)->enemyDef;
+        stateMachine.currState = "Idle";
     }
-    inline void Update(eDef* def, Character& character, float deltaTime) override
+    inline void Update(Character& character, float deltaTime) override
     {
         float dist = GetDistance(character);
-        if(dist <= 100.0f) SetState(def, "Attack");
-        else SetState(def, (!InBounds(position, mapBound) || dist < 1000.0f) ? "Move" : "Idle");
-        if(currentState == "Move") Movement(character, deltaTime);
-        UpdateSelf(character, def, deltaTime);
+        if(dist <= 100.0f) stateMachine.SetState("Attack");
+        else stateMachine.SetState((!InBounds(pos, mapBound) || dist < 1000.0f) ? "Move" : "Idle");
+        if(stateMachine.currState == "Move") Movement(character, deltaTime);
+        UpdateSelf(character, deltaTime);
         GiveDamage(character, deltaTime);
     }
     inline void Movement(Character& character, float deltaTime, float speed = 150.0f)
     {
-        direction = (character.position.x < position.x) ? Horizontal::Flip : Horizontal::Norm;
-        float angle = atan2(character.position.y - position.y, character.position.x - position.x);
-        position.x += cos(angle) * speed * deltaTime;
-        position.y += sin(angle) * speed * deltaTime;
+        direction = (character.pos.x < pos.x) ? Horizontal::Flip : Horizontal::Norm;
+        float angle = std::atan2(character.pos.y - pos.y, character.pos.x - pos.x);
+        pos.x += std::cos(angle) * speed * deltaTime;
+        pos.y += std::sin(angle) * speed * deltaTime;
     }
     inline void GiveDamage(Character& character, float deltaTime) override
     {
-        if(character.currPowerup == pPowerupType::Shield) return;
-        if(GetDistance(character) < 100.0f && currentState == "Attack") character.health -= deltaTime;
+        if(character.currPowerup == PowerupType::Shield) return;
+        if(GetDistance(character) < 100.0f &&  stateMachine.currState == "Attack") character.health -= deltaTime;
     }
-    inline void SetSpawnData(v2f pos) override
+    inline void SetSpawnData(const v2f& pos) override
     {
-        position = pos;
+        this->pos = pos;
     }
-    inline void Draw(eDef* def, Window& window, float deltaTime) override
+    inline void Draw(Window& window, float deltaTime) override
     {
-        DrawSelf(def, window, deltaTime);
+        DrawSelf(window, deltaTime);
     }
 };
 
-struct eBall
+struct EnergyBall
 {
-    v2f position;
+    v2f pos;
     float distanceCovered = 0.0f;
     bool remove = false;
     inline void Update(Character& character, float deltaTime, float speed = 150.0f)
     {
         remove = distanceCovered > 300.0f;
-        float angle = atan2(character.position.y - position.y, character.position.x - position.x);
-        position.x += cos(angle) * speed * deltaTime;
-        position.y += sin(angle) * speed * deltaTime;
+        float angle = std::atan2(character.pos.y - pos.y, character.pos.x - pos.x);
+        pos.x += std::cos(angle) * speed * deltaTime;
+        pos.y += std::sin(angle) * speed * deltaTime;
         distanceCovered += speed * deltaTime;
     }
 };
 
-struct eRanged : eCommon
+struct Ranged : EnemyBase
 {
-    eRanged()
+    Ranged()
     {
-        type = eType::Ranged;
+        type = EnemyType::Ranged;
         timeSinceAttack = 0.0f;
-        DefineState("Idle", animUpdate::Loop, 0.2f);
-        DefineState("Spawn", animUpdate::Once, 0.2f);
-        DefineState("Attack", animUpdate::Once, 0.2f);
-        DefineState("Dead", animUpdate::Once, 0.2f);
-        currentState = "Spawn";
+        stateMachine.DefineState("Idle", AnimUpdate::Loop, 0.2f);
+        stateMachine.DefineState("Spawn", AnimUpdate::Once, 0.2f);
+        stateMachine.DefineState("Attack", AnimUpdate::Once, 0.2f);
+        stateMachine.DefineState("Dead", AnimUpdate::Once, 0.2f);
+        stateMachine.def = &defMap.at(type)->enemyDef;
+        stateMachine.currState = "Spawn";
         ball.remove = true;
     }
-    inline void Update(eDef* def, Character& character, float deltaTime) override
+    inline void Update(Character& character, float deltaTime) override
     {
         timeSinceAttack += deltaTime;
-        SetState(def, timeSinceAttack < 5.0f ? "Idle" : "Attack");
-        if(currentState == "Attack") Attack();
-        UpdateSelf(character, def, deltaTime);
+        stateMachine.SetState(timeSinceAttack < 5.0f ? "Idle" : "Attack");
+        if(stateMachine.currState == "Attack") Attack();
+        UpdateSelf(character, deltaTime);
         UpdateEnergyBall(character, deltaTime);
         GiveDamage(character, deltaTime);
     }
     inline void Attack()
     {
-        ball.position = position;
+        ball.pos = pos;
         ball.distanceCovered = 0.0f;
         ball.remove = false;
-        currentState = "Idle";
+        stateMachine.currState = "Idle";
         timeSinceAttack = 0.0f;
     }
-    inline void Draw(eDef* def, Window& window, float deltaTime) override
+    inline void Draw(Window& window, float deltaTime) override
     {
-        DrawSelf(def, window, deltaTime);
-        DrawEnergyBall(window, def);
+        DrawSelf(window, deltaTime);
+        DrawEnergyBall(window);
     }
     inline void GiveDamage(Character& character, float deltaTime) override
     {
-        if(!ball.remove && Distance(ball.position, character.position) < 50.0f)
+        if(!ball.remove && Distance(ball.pos, character.pos) < 50.0f)
         {
-            if(character.currPowerup != pPowerupType::Shield)
+            if(character.currPowerup != PowerupType::Shield)
                 character.health -= deltaTime * 3.0f;
             ball.remove = true;
         }
     }
-    inline void SetSpawnData(v2f pos) override
+    inline void SetSpawnData(const v2f& pos) override
     {
-        position = pos;
-        ball.position = pos;
+        this->pos = ball.pos = pos;
     }
-    inline void DrawEnergyBall(Window& window, eDef* def) 
+    inline void DrawEnergyBall(Window& window) 
     {
-        if(!ball.remove) window.DrawSprite(ball.position.x, ball.position.y, def->animMap["Energy"][0], 5.0f);
+        if(!ball.remove) 
+            window.DrawSprite(ball.pos.x, ball.pos.y, stateMachine.GetFrameList("Energy")[0], 5.0f);
     }
     inline void UpdateEnergyBall(Character& character, float deltaTime)
     {
-        if(!ball.remove) ball.Update(character, deltaTime);
+        if(!ball.remove) 
+            ball.Update(character, deltaTime);
     }
 private:
-    eBall ball;
+    EnergyBall ball;
     float timeSinceAttack;
 };
 
-struct eWrapper
+struct EnemyWrapper
 {
-    eCommon* enemy;
+    EnemyBase* enemy;
     bool remove = false;
-    void Update(eDef* def, Character& character, float deltaTime)
+    void Update(Character& character, float deltaTime)
     {
-        if(enemy->currentState == "Dead") remove = enemy->states["Dead"].played;
-        int coinInc = remove ? (character.currPowerup == pPowerupType::Money ? 3 : 1) : 0;
+        if(enemy->stateMachine.currState == "Dead") remove = enemy->stateMachine.states["Dead"].played;
+        int coinInc = remove ? (character.currPowerup == PowerupType::Money ? 3 : 1) : 0;
         character.coins += character.coinMultiplier * coinInc;
-        enemy->Update(def, character, deltaTime);
+        enemy->Update(character, deltaTime);
     }
-    void Draw(eDef* def, Window& window, float deltaTime)
+    void Draw(Window& window, float deltaTime)
     {
-        enemy->Draw(def, window, deltaTime);
+        enemy->Draw(window, deltaTime);
     }
 };
 
-const std::unordered_map<eType, eSpawnType> spawnMap
+const std::unordered_map<EnemyType, eSpawnType> spawnMap
 {
-    {eType::Ghost, eSpawnType::Outside},
-    {eType::Ranged, eSpawnType::Inside}
+    {EnemyType::Ghost, eSpawnType::Outside},
+    {EnemyType::Ranged, eSpawnType::Inside}
 };
 
-std::unordered_map<eType, eDef*> defMap
-{
-    {eType::Ghost, new eGhostDef()},
-    {eType::Ranged, new eRangedDef()}
-};
-
-inline void SpawnEnemy(std::vector<eWrapper>& enemies, eType enemyType, Window& window)
+inline void SpawnEnemy(std::vector<EnemyWrapper>& enemies, EnemyType enemyType, Window& window)
 {
     switch(enemyType)
     {
-        case eType::Ghost: enemies.push_back({new eGhost()}); break;
-        case eType::Ranged: enemies.push_back({new eRanged()}); break;
+        case EnemyType::Ghost: enemies.push_back({new Ghost()}); break;
+        case EnemyType::Ranged: enemies.push_back({new Ranged()}); break;
     }
     const float w = (float)window.GetWidth();
     const float h = (float)window.GetHeight();
@@ -460,24 +434,24 @@ inline void SpawnEnemy(std::vector<eWrapper>& enemies, eType enemyType, Window& 
     enemies.back().enemy->SetSpawnData({x, y});
 }
 
-enum class wSpawnSystem
+enum class SpawnSystemState
 {
     Spawning,
     Cooldown
 };
 
-struct eWaves
+struct WaveSystem
 {
     float timeSinceSpawn;
-    std::vector<eWrapper> enemies;
-    wSpawnSystem spawnSystem;
+    std::vector<EnemyWrapper> enemies;
+    SpawnSystemState spawnSystem;
     int currentWave, enemiesSpawned;
     inline void Reset()
     {
         timeSinceSpawn = 0.0f;
         currentWave = 1;
         enemiesSpawned = 0;
-        spawnSystem = wSpawnSystem::Cooldown;
+        spawnSystem = SpawnSystemState::Cooldown;
         for(auto& enemy : enemies)
         {
             delete enemy.enemy;
@@ -491,23 +465,23 @@ struct eWaves
 
         switch(spawnSystem)
         {
-            case wSpawnSystem::Cooldown:
+            case SpawnSystemState::Cooldown:
             {
-                if(timeSinceSpawn > 20.0f) 
+                if(timeSinceSpawn > 2.0f) 
                 {
                     currentWave++;
                     timeSinceSpawn = 0.0f;
-                    spawnSystem = wSpawnSystem::Spawning;
+                    spawnSystem = SpawnSystemState::Spawning;
                 }
             }
             break;
-            case wSpawnSystem::Spawning:
+            case SpawnSystemState::Spawning:
             {
                 if(timeSinceSpawn > 5.0f)
                 {
                     if(enemiesSpawned < currentWave) 
                     {
-                        SpawnEnemy(enemies, (eType)rand(0, 2), window);
+                        SpawnEnemy(enemies, (EnemyType)rand(0, 2), window);
                         timeSinceSpawn = 0.0f;
                         enemiesSpawned++;
                     }
@@ -516,29 +490,29 @@ struct eWaves
                 {
                     timeSinceSpawn = 0.0f;
                     enemiesSpawned = 0;
-                    spawnSystem = wSpawnSystem::Cooldown;
+                    spawnSystem = SpawnSystemState::Cooldown;
                 }
             }
             break;
         }
 
-        for(auto& enemy : enemies) enemy.Update(defMap[enemy.enemy->type], character, deltaTime);
+        for(auto& enemy : enemies) enemy.Update(character, deltaTime);
 
-        enemies.erase(std::remove_if(enemies.begin(), enemies.end(), [](eWrapper& wrapper){return wrapper.remove;}), enemies.end());
+        enemies.erase(std::remove_if(enemies.begin(), enemies.end(), [](EnemyWrapper& wrapper){return wrapper.remove;}), enemies.end());
     }
     inline void Draw(Window& window, float deltaTime)
     {
         window.DrawText(window.GetWidth() * 0.5f, 30, "WAVE " + std::to_string(currentWave), 3.0f,
-            (spawnSystem == wSpawnSystem::Cooldown) ? Color{255, 255, 255, 255} : Color{255, 0, 0, 255}, TextRenderMode::Middle);
+            (spawnSystem == SpawnSystemState::Cooldown) ? Color{255, 255, 255, 255} : Color{255, 0, 0, 255}, TextRenderMode::Middle);
     
-        for(auto& enemy : enemies) enemy.Draw(defMap[enemy.enemy->type], window, deltaTime);
+        for(auto& enemy : enemies) enemy.Draw(window, deltaTime);
     }
 };
 
-struct pChest
+struct Chest
 {
-    std::unordered_map<pPowerupType, Sprite> powerups;
-    v2f position = v2f(900.0f, 170.0f);
+    std::unordered_map<PowerupType, Sprite> powerups;
+    v2f pos = v2f(900.0f, 170.0f);
     Animator animator;
     float elapsedTime;
     enum class cUpdate
@@ -547,18 +521,18 @@ struct pChest
         Closed,
         Open
     } cUpdateType = cUpdate::Closed;
-    pChest()
+    Chest()
     {
-        animator.frames.emplace_back("assets\\chest\\frames\\frame-0.png");
-        animator.frames.emplace_back("assets\\chest\\frames\\frame-1.png");
-        animator.frames.emplace_back("assets\\chest\\frames\\frame-2.png");
-        powerups[pPowerupType::Health] = Sprite("assets\\chest\\powerups\\health.png");
-        powerups[pPowerupType::Speed] = Sprite("assets\\chest\\powerups\\fast-run.png");
-        powerups[pPowerupType::Shield] = Sprite("assets\\chest\\powerups\\shield.png");
-        powerups[pPowerupType::Money] = Sprite("assets\\chest\\powerups\\money-icon.png");
-        animator.data.update = animUpdate::Once;
+        animator.AddFrame("assets\\chest\\frames\\frame-0.png");
+        animator.AddFrame("assets\\chest\\frames\\frame-1.png");
+        animator.AddFrame("assets\\chest\\frames\\frame-2.png");
+        powerups[PowerupType::Health] = Sprite("assets\\chest\\powerups\\health.png");
+        powerups[PowerupType::Speed] = Sprite("assets\\chest\\powerups\\fast-run.png");
+        powerups[PowerupType::Shield] = Sprite("assets\\chest\\powerups\\shield.png");
+        powerups[PowerupType::Money] = Sprite("assets\\chest\\powerups\\money-icon.png");
+        animator.data.update = AnimUpdate::Once;
         animator.data.duration = 0.2f;
-        animator.data.Reverse(true);
+        animator.data.Reverse();
         elapsedTime = 5.0f;
     }
     inline void Reset()
@@ -566,21 +540,20 @@ struct pChest
         elapsedTime = 5.0f;
         animator.data.index = 0;
         animator.data.totalTime = 0.0f;
-        animator.data.Reverse(true);
         cUpdateType = cUpdate::Closed;
     }
     inline void DrawPowerup(Character& character, Window& window, float deltaTime)
     {
-        if(character.currPowerup == pPowerupType::None) return;
-        float y = position.y - std::clamp(elapsedTime, 0.0f, 4.0f) * 10.0f;
-        window.DrawSprite(position.x, y, powerups[character.currPowerup], 3.0f);
+        if(character.currPowerup == PowerupType::None) return;
+        float y = pos.y - std::clamp(elapsedTime, 0.0f, 4.0f) * 10.0f;
+        window.DrawSprite(pos.x, y, powerups[character.currPowerup], 3.0f);
     }
     inline void Draw(Character& character, Window& window, float deltaTime)
     {
-        if(cUpdateType == cUpdate::Closed && Distance(character.position, position) < 100.0f && elapsedTime > 5.0f)
-            window.DrawText(position.x - 100.0f, position.y - 60.0f, "Press E to open.", 1.5f, {255, 255, 255, 255});
+        if(cUpdateType == cUpdate::Closed && Distance(character.pos, pos) < 100.0f && elapsedTime > 5.0f)
+            window.DrawText(pos.x - 100.0f, pos.y - 60.0f, "Press E to open.", 1.5f, {255, 255, 255, 255});
         
-        window.DrawSprite(position.x, position.y, animator.GetCurrFrame(), 6.0f);
+        window.DrawSprite(pos.x, pos.y, animator.GetFrame(), 6.0f);
         
         DrawPowerup(character, window, deltaTime);
     }
@@ -593,7 +566,7 @@ struct pChest
                 animator.Update(deltaTime);
                 if(animator.data.played)
                 {
-                    character.currPowerup = (pPowerupType)rand(0, 4);
+                    character.currPowerup = (PowerupType)rand(0, 4);
                     cUpdateType = cUpdate::Open;
                 } 
             }
@@ -602,10 +575,10 @@ struct pChest
             {
                 animator.Update(deltaTime);
                 elapsedTime += deltaTime;
-                if(elapsedTime > 5.0f && keypressed && Distance(character.position, position) < 100.0f) 
+                if(elapsedTime > 5.0f && keypressed && Distance(character.pos, pos) < 100.0f) 
                 {
                     elapsedTime = 0.0f;
-                    animator.data.Reverse(false);
+                    animator.data.Reverse();
                     cUpdateType = cUpdate::Opening;
                 }
             }
@@ -616,8 +589,8 @@ struct pChest
                 if(elapsedTime > 10.0f) 
                 {
                     elapsedTime = 0.0f;
-                    animator.data.Reverse(true);
-                    character.currPowerup = pPowerupType::None;
+                    animator.data.Reverse();
+                    character.currPowerup = PowerupType::None;
                     cUpdateType = cUpdate::Closed;
                 }
             } 
@@ -629,7 +602,7 @@ struct pChest
 struct Item
 {
     std::string desc;
-    Sprite* sprite;
+    Sprite sprite;
     int currLevel;
     std::vector<std::pair<int, float>> data;
     inline const float GetPower() const
@@ -643,7 +616,7 @@ struct Market
     std::unordered_map<std::string, Item> items;
     std::vector<std::string> itemIndices;
     int currItemIndex = 0;
-    v2f position;
+    v2f pos;
     float size = 1.0f;
     inline void Deserialize(DataNode& datanode)
     {
@@ -651,7 +624,7 @@ struct Market
             itemIndices.push_back(p.first);
             items[p.first].desc = GetString(p.second["desc"], 0).value();
             items[p.first].currLevel = GetData<int>(p.second["current index"], 0).value();
-            items[p.first].sprite = new Sprite(GetString(p.second["directory"], 0).value());
+            items[p.first].sprite = Sprite(GetString(p.second["directory"], 0).value());
             p.second["price list"].data_foreach([&](Container container){
                 items[p.first].data.push_back(std::make_pair(container.get<int>().value(), 0));
             });
@@ -683,10 +656,10 @@ struct Market
     inline void Draw(Character& character, Window& window)
     {
         auto& sprite = items[itemIndices[currItemIndex]].sprite;
-        const float y = position.y + sprite->height * size * 1.5f;
-        window.DrawText(position.x, y, GetItemDesc(), size * 0.5f, {255, 255, 255, 255}, TextRenderMode::Middle);
+        const float y = pos.y + sprite.height * size * 1.5f;
+        window.DrawText(pos.x, y, GetItemDesc(), size * 0.5f, {255, 255, 255, 255}, TextRenderMode::Middle);
         window.DrawText(10, 10, "COINS:" + std::to_string(character.coins), 2.0f, {255, 255, 255, 255});
-        window.DrawSprite(position.x, position.y, *sprite, size * 1.5f);
+        window.DrawSprite(pos.x, pos.y, sprite, size * 1.5f);
     }
     inline std::string GetItemDesc()
     {
