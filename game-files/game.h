@@ -393,7 +393,7 @@ struct EnemyWrapper
     bool remove = false;
     void Update(Character& character, float deltaTime)
     {
-        if(enemy->stateMachine.currState == "Dead") remove = enemy->stateMachine.states["Dead"].played;
+        if(enemy->stateMachine.currState == "Dead") remove = enemy->stateMachine["Dead"].played;
         int coinInc = remove ? (character.currPowerup == PowerupType::Money ? 3 : 1) : 0;
         character.coins += character.coinMultiplier * coinInc;
         enemy->Update(character, deltaTime);
