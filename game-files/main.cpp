@@ -102,6 +102,7 @@ public:
     inline void DrawAndUpdate(Window& window)
     {
         timer.Update();
+        window.Begin();
         switch(currGameState)
         {
             case Gamestate::MainMenu: MenuDrawAndUpdate(window); break;
@@ -112,6 +113,7 @@ public:
         }
         window.SwapBuffers();
         batch.Flush();
+        window.End();
     }
     inline void MenuDrawAndUpdate(Window& window)
     {
@@ -151,7 +153,7 @@ public:
 
         menuManager.Draw(window);
 
-        batch.Draw(menuBackgroundSprite, rect{0.0f, 0.0f, (float)window.GetWidth(), (float)window.GetHeight()});
+        batch.Draw(menuBackgroundSprite, Rect{0.0f, 0.0f, (float)window.GetWidth(), (float)window.GetHeight()});
 
         batch.Flush();
     }
@@ -193,7 +195,7 @@ public:
 
         window.pixelMode = PixelMode::Normal;
 
-        batch.Draw(mapSprite, rect{0.0f, 0.0f, (float)window.GetWidth(), (float)window.GetHeight()});
+        batch.Draw(mapSprite, Rect{0.0f, 0.0f, (float)window.GetWidth(), (float)window.GetHeight()});
 
         batch.Flush();
     }
@@ -263,11 +265,7 @@ int main()
     Window window = Window(1024, 768);
     Game instance = Game(window);
     while(!glfwWindowShouldClose(window.handle))
-    {
-        window.Begin();
         instance.DrawAndUpdate(window);
-        window.End();
-    }
     instance.End();
     return 0;
 }

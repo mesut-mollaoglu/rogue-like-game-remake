@@ -3,7 +3,7 @@
 
 #include "../custom-game-engine/headers/includes.h"
 
-const rect mapBound = 
+const Rect mapBound = 
 {
     90.0f, 160.0f, 920.0f, 650.0f
 };
@@ -22,9 +22,9 @@ enum class PowerupType
     None
 };
 
-inline bool InBounds(v2f pos, rect rc)
+inline bool InBounds(v2f pos, Rect rc)
 {
-    return pos.x < rc.ex && pos.x > rc.sx && pos.y < rc.ey && pos.y > rc.sx;
+    return rc.Contains(pos);
 }
 
 struct Character
@@ -219,8 +219,8 @@ enum class eSpawnType : uint8_t
 inline void DrawHealth(float x, float y, Window& window, float width, float height, float health, float min = 0.0f, float max = 100.0f)
 {
     float finalWidth = width * health / (max - min);
-    window.DrawRect(x + finalWidth - width * 0.5f, y - height * 0.5f, x + width * 0.5f, y + height * 0.5f, {0, 0, 0, 255});
-    window.DrawRect(x - width * 0.5f, y - height * 0.5f, x + finalWidth - width * 0.5f, y + height * 0.5f, {255, 255, 255, 255});
+    window.DrawRect(x + finalWidth - width * 0.5f, y - height * 0.5f, width, height, {0, 0, 0, 255});
+    window.DrawRect(x - width * 0.5f, y - height * 0.5f, finalWidth - width, height, {255, 255, 255, 255});
 }
 
 std::unordered_map<EnemyType, EnemyDef*> defMap
