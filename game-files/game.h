@@ -145,9 +145,9 @@ struct EnemyDef
     float size, healthBarOffset;
 };
 
-struct eGhostDef : EnemyDef
+struct GhostDef : EnemyDef
 {
-    eGhostDef()
+    GhostDef()
     {
         enemyDef["Attack"].AddFrame("assets\\enemy\\attack\\frame-1.png");
         enemyDef["Attack"].AddFrame("assets\\enemy\\attack\\frame-2.png");
@@ -177,9 +177,9 @@ struct eGhostDef : EnemyDef
     }
 };
 
-struct eRangedDef : EnemyDef
+struct RangedDef : EnemyDef
 {
-    eRangedDef()
+    RangedDef()
     {
         enemyDef["Attack"].AddFrame("assets\\ranged-enemy\\attack\\frame-0.png");
         enemyDef["Attack"].AddFrame("assets\\ranged-enemy\\attack\\frame-1.png");
@@ -219,14 +219,14 @@ enum class eSpawnType : uint8_t
 inline void DrawHealth(float x, float y, Window& window, float width, float height, float health, float min = 0.0f, float max = 100.0f)
 {
     float finalWidth = width * health / (max - min);
-    window.DrawRect(x + finalWidth - width * 0.5f, y - height * 0.5f, width, height, {0, 0, 0, 255});
-    window.DrawRect(x - width * 0.5f, y - height * 0.5f, finalWidth - width, height, {255, 255, 255, 255});
+    window.DrawRect(x - width * 0.5f, y - height * 0.5f, finalWidth, height, Color(255, 255, 255, 255));
+    window.DrawRect(x + finalWidth - width * 0.5f, y - height * 0.5f, width - finalWidth, height, Color(0, 0, 0, 255));
 }
 
 std::unordered_map<EnemyType, EnemyDef*> defMap
 {
-    {EnemyType::Ghost, new eGhostDef()},
-    {EnemyType::Ranged, new eRangedDef()}
+    {EnemyType::Ghost, new GhostDef()},
+    {EnemyType::Ranged, new RangedDef()}
 };
 
 struct EnemyBase
@@ -247,8 +247,8 @@ struct EnemyBase
     }
     inline void UpdateSelf(Character& character, float deltaTime)
     {
-        TakeDamage(character, deltaTime);
         if(health <= 0.0f) stateMachine.SetState("Dead");
+        else TakeDamage(character, deltaTime);
         stateMachine.Update(deltaTime);
     }
     inline float GetDistance(Character& character)
@@ -295,7 +295,7 @@ struct Ghost : EnemyBase
     }
     inline void GiveDamage(Character& character, float deltaTime) override
     {
-        if(character.currPowerup == PowerupType::Shield) return;
+        if(health <= 0.0f && character.currPowerup == PowerupType::Shield) return;
         if(GetDistance(character) < 100.0f &&  stateMachine.currState == "Attack") character.health -= deltaTime;
     }
     inline void SetSpawnData(const v2f& pos) override
@@ -361,12 +361,9 @@ struct Ranged : EnemyBase
     }
     inline void GiveDamage(Character& character, float deltaTime) override
     {
-        if(!ball.remove && Distance(ball.pos, character.pos) < 50.0f)
-        {
-            if(character.currPowerup != PowerupType::Shield)
-                character.health -= deltaTime * 3.0f;
-            ball.remove = true;
-        }
+        if(health <= 0.0f || character.currPowerup == PowerupType::Shield || ball.remove || Distance(ball.pos, character.pos) > 50.0f) return;
+        character.health -= deltaTime * 10.0f;
+        ball.remove = true;
     }
     inline void SetSpawnData(const v2f& pos) override
     {
