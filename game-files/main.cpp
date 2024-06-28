@@ -149,7 +149,7 @@ public:
             default: break;
         }
 
-        window.Clear({255, 0, 0, 255});
+        window.Clear({0, 0, 0, 255});
 
         menuManager.Draw(window);
 
