@@ -66,7 +66,7 @@ public:
         gameOverMenu["Retry"].id = (int32_t)Gamestate::Main;
         gameOverMenu["Main Menu"].id = (int32_t)Gamestate::MainMenu;
         gameOverMenu.position = window.GetScrSize() * 0.5f;
-        gameOverMenu.renderMode = TextRenderMode::Middle;
+        gameOverMenu.textOffset = 0.5f;
         gameOverMenu.tableSize = {1, 2};
         gameOverMenu.size = 4.0f;
         gameOverMenu.BuildMenu();
@@ -74,7 +74,7 @@ public:
         pauseMenu["Main Menu"].id = (int32_t)Gamestate::MainMenu;
         pauseMenu["Resume"].id = (int32_t)Gamestate::Main;
         pauseMenu.position = window.GetScrSize() * 0.5f;
-        pauseMenu.renderMode = TextRenderMode::Middle;
+        pauseMenu.textOffset = 0.5f;
         pauseMenu.tableSize = {1, 2};
         pauseMenu.size = 4.0f;
         pauseMenu.BuildMenu();
@@ -149,13 +149,11 @@ public:
             default: break;
         }
 
-        window.Clear({0, 0, 0, 0});
+        window.Clear({255, 0, 0, 255});
 
         menuManager.Draw(window);
 
-        batch.Draw(menuBackgroundSprite, Rect{0.0f, 0.0f, (float)window.GetWidth(), (float)window.GetHeight()});
-
-        batch.Flush();
+        batch.Draw(menuBackgroundSprite, window.GetViewport()); 
     }
     inline void MarketDrawAndUpdate(Window& window)
     {
@@ -185,6 +183,8 @@ public:
 
         window.Clear({0, 0, 0, 0});
 
+        batch.Draw(mapSprite, window.GetViewport());
+
         window.pixelMode = PixelMode::Mask;
  
         chest.Draw(character, window, timer.deltaTime);
@@ -194,10 +194,6 @@ public:
         waveController.Draw(window, timer.deltaTime);
 
         window.pixelMode = PixelMode::Normal;
-
-        batch.Draw(mapSprite, Rect{0.0f, 0.0f, (float)window.GetWidth(), (float)window.GetHeight()});
-
-        batch.Flush();
     }
     inline void PauseDrawAndUpdate(Window& window)
     {
@@ -218,7 +214,7 @@ public:
 
         window.Clear({0, 0, 0, 255});
 
-        window.DrawText(window.GetWidth() * 0.5f, 100, "PAUSED", 4.0f, {255, 255, 255, 255}, TextRenderMode::Middle);
+        window.DrawText(window.GetWidth() * 0.5f, 100, "PAUSED", 4.0f, {255, 255, 255, 255}, 0.5f);
 
         menuManager.Draw(window);
     }
@@ -248,7 +244,7 @@ public:
 
         window.Clear({0, 0, 0, 255});
 
-        window.DrawText(window.GetWidth() * 0.5, 100, "You lost", 6.0f, {255, 255, 255, 255}, TextRenderMode::Middle);
+        window.DrawText(window.GetWidth() * 0.5, 100, "You lost", 6.0f, {255, 255, 255, 255}, 0.5f);
 
         menuManager.Draw(window);
     }

@@ -8,7 +8,7 @@ const Rect mapBound =
     90.0f, 160.0f, 920.0f, 650.0f
 };
 
-inline float Distance(v2f v1, v2f v2)
+inline float Distance(vec2f v1, vec2f v2)
 {
     return (v1 - v2).mag();
 }
@@ -22,7 +22,7 @@ enum class PowerupType
     None
 };
 
-inline bool InBounds(v2f pos, Rect rc)
+inline bool InBounds(vec2f pos, Rect rc)
 {
     return rc.Contains(pos);
 }
@@ -33,7 +33,7 @@ struct Character
     float velocity = 150.0f;
     int health, maxHealth;
     int coins, coinMultiplier;
-    v2f pos;
+    vec2f pos;
     Horizontal direction;
     StateMachine stateMachine;
     Character()
@@ -234,12 +234,12 @@ struct EnemyBase
     EntityStateMachine stateMachine;
     Horizontal direction = Horizontal::Norm;
     float health = 100.0f;
-    v2f pos = 0.0f;
+    vec2f pos = 0.0f;
     EnemyType type;
     virtual void Update(Character& character, float deltaTime) = 0;
     virtual void Draw(Window& window, float deltaTime) = 0;
     virtual void GiveDamage(Character& character, float deltaTime) = 0;
-    virtual void SetSpawnData(const v2f& pos) = 0;
+    virtual void SetSpawnData(const vec2f& pos) = 0;
     inline void DrawSelf(Window& window, float deltaTime)
     {
         stateMachine.Draw(window, pos.x, pos.y, defMap.at(type)->size, direction);
@@ -298,7 +298,7 @@ struct Ghost : EnemyBase
         if(health <= 0.0f && character.currPowerup == PowerupType::Shield) return;
         if(GetDistance(character) < 100.0f &&  stateMachine.currState == "Attack") character.health -= deltaTime;
     }
-    inline void SetSpawnData(const v2f& pos) override
+    inline void SetSpawnData(const vec2f& pos) override
     {
         this->pos = pos;
     }
@@ -310,7 +310,7 @@ struct Ghost : EnemyBase
 
 struct EnergyBall
 {
-    v2f pos;
+    vec2f pos;
     float distanceCovered = 0.0f;
     bool remove = false;
     inline void Update(Character& character, float deltaTime, float speed = 150.0f)
@@ -365,7 +365,7 @@ struct Ranged : EnemyBase
         character.health -= deltaTime * 10.0f;
         ball.remove = true;
     }
-    inline void SetSpawnData(const v2f& pos) override
+    inline void SetSpawnData(const vec2f& pos) override
     {
         this->pos = ball.pos = pos;
     }
@@ -500,7 +500,7 @@ struct WaveSystem
     inline void Draw(Window& window, float deltaTime)
     {
         window.DrawText(window.GetWidth() * 0.5f, 30, "WAVE " + std::to_string(currentWave), 3.0f,
-            (spawnSystem == SpawnSystemState::Cooldown) ? Color{255, 255, 255, 255} : Color{255, 0, 0, 255}, TextRenderMode::Middle);
+            (spawnSystem == SpawnSystemState::Cooldown) ? Color{255, 255, 255, 255} : Color{255, 0, 0, 255}, 0.5f);
     
         for(auto& enemy : enemies) enemy.Draw(window, deltaTime);
     }
@@ -509,7 +509,7 @@ struct WaveSystem
 struct Chest
 {
     std::unordered_map<PowerupType, Sprite> powerups;
-    v2f pos = v2f(900.0f, 170.0f);
+    vec2f pos = vec2f(900.0f, 170.0f);
     Animator animator;
     float elapsedTime;
     enum class cUpdate
@@ -537,6 +537,7 @@ struct Chest
         elapsedTime = 5.0f;
         animator.data.index = 0;
         animator.data.totalTime = 0.0f;
+        animator.data.reverse = true;
         cUpdateType = cUpdate::Closed;
     }
     inline void DrawPowerup(Character& character, Window& window, float deltaTime)
@@ -613,7 +614,7 @@ struct Market
     std::unordered_map<std::string, Item> items;
     std::vector<std::string> itemIndices;
     int currItemIndex = 0;
-    v2f pos;
+    vec2f pos;
     float size = 1.0f;
     inline void Deserialize(DataNode& datanode)
     {
@@ -654,7 +655,7 @@ struct Market
     {
         auto& sprite = items[itemIndices[currItemIndex]].sprite;
         const float y = pos.y + sprite.height * size * 1.5f;
-        window.DrawText(pos.x, y, GetItemDesc(), size * 0.5f, {255, 255, 255, 255}, TextRenderMode::Middle);
+        window.DrawText(pos.x, y, GetItemDesc(), size * 0.5f, {255, 255, 255, 255}, 0.5f);
         window.DrawText(10, 10, "COINS:" + std::to_string(character.coins), 2.0f, {255, 255, 255, 255});
         window.DrawSprite(pos.x, pos.y, sprite, size * 1.5f);
     }
