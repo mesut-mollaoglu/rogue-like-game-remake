@@ -30,7 +30,6 @@ private:
     Market market;
     Menu gameOverMenu;
     Menu pauseMenu;
-    Timer timer;
 public:
     inline Game() = default;
     inline Game(Window& window)
@@ -81,8 +80,6 @@ public:
 
         waveController.Reset();
 
-        timer = Timer();
-        
         menuManager.Close();
 
         Restart();
@@ -101,7 +98,6 @@ public:
     }
     inline void DrawAndUpdate(Window& window)
     {
-        timer.Update();
         window.Begin();
         switch(currGameState)
         {
@@ -148,7 +144,7 @@ public:
             break;
             default: break;
         }
-
+        
         window.Clear({0, 0, 0, 255});
 
         menuManager.Draw(window);
@@ -175,11 +171,11 @@ public:
 
         if(character.health <= 0) currGameState = Gamestate::EndFail;
         
-        character.Update(window, timer.deltaTime);
+        character.Update(window);
 
-        waveController.Update(window, character, timer.deltaTime);
+        waveController.Update(window, character);
         
-        chest.Update(character, timer.deltaTime, window.GetKey(GLFW_KEY_E) == Key::Pressed);
+        chest.Update(character, window);
 
         window.Clear({0, 0, 0, 0});
 
@@ -187,11 +183,11 @@ public:
 
         window.pixelMode = PixelMode::Mask;
  
-        chest.Draw(character, window, timer.deltaTime);
+        chest.Draw(character, window);
 
         character.Draw(window);
 
-        waveController.Draw(window, timer.deltaTime);
+        waveController.Draw(window);
 
         window.pixelMode = PixelMode::Normal;
     }

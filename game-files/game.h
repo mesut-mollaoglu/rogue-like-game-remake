@@ -82,37 +82,38 @@ struct Character
     
         coins = 0;
     }
-    inline void Movement(Window& window, float deltaTime, float speed)
+    inline void Movement(Window& window, float speed)
     {
+        const float dt = window.timer.deltaTime;
         if(currPowerup == PowerupType::Speed) speed *= 2.0f;
-        if(window.GetKey(GLFW_KEY_W) == Key::Held) pos.y -= speed * deltaTime;
-        if(window.GetKey(GLFW_KEY_S) == Key::Held) pos.y += speed * deltaTime;
+        if(window.GetKey(GLFW_KEY_W) == Key::Held) pos.y -= speed * dt;
+        if(window.GetKey(GLFW_KEY_S) == Key::Held) pos.y += speed * dt;
         if(window.GetKey(GLFW_KEY_A) == Key::Held) 
         {
-            pos.x -= speed * deltaTime;
+            pos.x -= speed * dt;
             if(direction == Horizontal::Norm) direction = Horizontal::Flip;
         }
         if(window.GetKey(GLFW_KEY_D) == Key::Held) 
         {
-            pos.x += speed * deltaTime;
+            pos.x += speed * dt;
             if(direction == Horizontal::Flip) direction = Horizontal::Norm;
         }
-        if(pos.x < mapBound.sx) pos.x += speed * deltaTime;
-        if(pos.x > mapBound.ex) pos.x -= speed * deltaTime;
-        if(pos.y < mapBound.sy) pos.y += speed * deltaTime;
-        if(pos.y > mapBound.ey) pos.y -= speed * deltaTime;
+        if(pos.x < mapBound.sx) pos.x += speed * dt;
+        if(pos.x > mapBound.ex) pos.x -= speed * dt;
+        if(pos.y < mapBound.sy) pos.y += speed * dt;
+        if(pos.y > mapBound.ey) pos.y -= speed * dt;
     }
-    inline void Dash(Window& window, float deltaTime)
+    inline void Dash(Window& window)
     {
-        float dx = 600.0f * deltaTime * (direction == Horizontal::Flip ? -1 : 1);
+        float dx = 600.0f * window.timer.deltaTime * (direction == Horizontal::Flip ? -1 : 1);
         if((pos.x + dx) > mapBound.sx && (pos.x + dx) < mapBound.ex) pos.x += dx;
     }
-    inline void Update(Window& window, float deltaTime)
+    inline void Update(Window& window)
     {
         if(currPowerup == PowerupType::Health) health = maxHealth;
-        if(stateMachine.currState == "Walking") Movement(window, deltaTime, velocity);
-        else if(stateMachine.currState == "Dash") Dash(window, deltaTime);
-        stateMachine.Update(window, deltaTime);
+        if(stateMachine.currState == "Walking") Movement(window, velocity);
+        else if(stateMachine.currState == "Dash") Dash(window);
+        stateMachine.Update(window);
     }
     inline void Draw(Window& window)
     {
@@ -237,10 +238,10 @@ struct EnemyBase
     vec2f pos = 0.0f;
     EnemyType type;
     virtual void Update(Character& character, float deltaTime) = 0;
-    virtual void Draw(Window& window, float deltaTime) = 0;
+    virtual void Draw(Window& window) = 0;
     virtual void GiveDamage(Character& character, float deltaTime) = 0;
     virtual void SetSpawnData(const vec2f& pos) = 0;
-    inline void DrawSelf(Window& window, float deltaTime)
+    inline void DrawSelf(Window& window)
     {
         stateMachine.Draw(window, pos.x, pos.y, defMap.at(type)->size, direction);
         DrawHealth(pos.x, pos.y - defMap.at(type)->healthBarOffset, window, 50.0f, 10.0f, health);
@@ -302,9 +303,9 @@ struct Ghost : EnemyBase
     {
         this->pos = pos;
     }
-    inline void Draw(Window& window, float deltaTime) override
+    inline void Draw(Window& window) override
     {
-        DrawSelf(window, deltaTime);
+        DrawSelf(window);
     }
 };
 
@@ -354,9 +355,9 @@ struct Ranged : EnemyBase
         stateMachine.currState = "Idle";
         timeSinceAttack = 0.0f;
     }
-    inline void Draw(Window& window, float deltaTime) override
+    inline void Draw(Window& window) override
     {
-        DrawSelf(window, deltaTime);
+        DrawSelf(window);
         DrawEnergyBall(window);
     }
     inline void GiveDamage(Character& character, float deltaTime) override
@@ -395,9 +396,9 @@ struct EnemyWrapper
         character.coins += character.coinMultiplier * coinInc;
         enemy->Update(character, deltaTime);
     }
-    void Draw(Window& window, float deltaTime)
+    void Draw(Window& window)
     {
-        enemy->Draw(window, deltaTime);
+        enemy->Draw(window);
     }
 };
 
@@ -456,9 +457,9 @@ struct WaveSystem
         }
         enemies.clear();
     }
-    inline void Update(Window& window, Character& character, float deltaTime)
+    inline void Update(Window& window, Character& character)
     {
-        timeSinceSpawn += deltaTime;
+        timeSinceSpawn += window.timer.deltaTime;
 
         switch(spawnSystem)
         {
@@ -493,16 +494,16 @@ struct WaveSystem
             break;
         }
 
-        for(auto& enemy : enemies) enemy.Update(character, deltaTime);
+        for(auto& enemy : enemies) enemy.Update(character, window.timer.deltaTime);
 
         enemies.erase(std::remove_if(enemies.begin(), enemies.end(), [](EnemyWrapper& wrapper){return wrapper.remove;}), enemies.end());
     }
-    inline void Draw(Window& window, float deltaTime)
+    inline void Draw(Window& window)
     {
         window.DrawText(window.GetWidth() * 0.5f, 30, "WAVE " + std::to_string(currentWave), 3.0f,
             (spawnSystem == SpawnSystemState::Cooldown) ? Color{255, 255, 255, 255} : Color{255, 0, 0, 255}, 0.5f);
     
-        for(auto& enemy : enemies) enemy.Draw(window, deltaTime);
+        for(auto& enemy : enemies) enemy.Draw(window);
     }
 };
 
@@ -540,28 +541,29 @@ struct Chest
         animator.data.reverse = true;
         cUpdateType = cUpdate::Closed;
     }
-    inline void DrawPowerup(Character& character, Window& window, float deltaTime)
+    inline void DrawPowerup(Character& character, Window& window)
     {
         if(character.currPowerup == PowerupType::None) return;
         float y = pos.y - std::clamp(elapsedTime, 0.0f, 4.0f) * 10.0f;
         window.DrawSprite(pos.x, y, powerups[character.currPowerup], 3.0f);
     }
-    inline void Draw(Character& character, Window& window, float deltaTime)
+    inline void Draw(Character& character, Window& window)
     {
         if(cUpdateType == cUpdate::Closed && Distance(character.pos, pos) < 100.0f && elapsedTime > 5.0f)
             window.DrawText(pos.x - 100.0f, pos.y - 60.0f, "Press E to open.", 1.5f, {255, 255, 255, 255});
         
         window.DrawSprite(pos.x, pos.y, animator.GetFrame(), 6.0f);
         
-        DrawPowerup(character, window, deltaTime);
+        DrawPowerup(character, window);
     }
-    inline void Update(Character& character, float deltaTime, bool keypressed)
+    inline void Update(Character& character, Window& window)
     {
+        const float dt = window.timer.deltaTime;
         switch(cUpdateType)
         {
             case cUpdate::Opening: 
             {
-                animator.Update(deltaTime);
+                animator.Update(dt);
                 if(animator.data.played)
                 {
                     character.currPowerup = (PowerupType)rand(0, 4);
@@ -571,9 +573,9 @@ struct Chest
             break;
             case cUpdate::Closed: 
             {
-                animator.Update(deltaTime);
-                elapsedTime += deltaTime;
-                if(elapsedTime > 5.0f && keypressed && Distance(character.pos, pos) < 100.0f) 
+                animator.Update(dt);
+                elapsedTime += dt;
+                if(elapsedTime > 5.0f && window.GetKey(GLFW_KEY_E) == Key::Pressed && Distance(character.pos, pos) < 100.0f) 
                 {
                     elapsedTime = 0.0f;
                     animator.data.Reverse();
@@ -583,7 +585,7 @@ struct Chest
             break;
             case cUpdate::Open:
             {
-                elapsedTime += deltaTime;
+                elapsedTime += dt;
                 if(elapsedTime > 10.0f) 
                 {
                     elapsedTime = 0.0f;
