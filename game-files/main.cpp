@@ -107,7 +107,6 @@ public:
             case Gamestate::EndFail: EndFailDrawAndUpdate(window); break;
             case Gamestate::Pause: PauseDrawAndUpdate(window); break;
         }
-        window.SwapBuffers();
         batch.Flush();
         window.End();
     }
