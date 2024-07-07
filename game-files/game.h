@@ -35,7 +35,7 @@ struct Character
     int coins, coinMultiplier;
     vec2f pos;
     Horizontal direction;
-    StateMachine stateMachine;
+    StateMachine<Sprite> stateMachine;
     Character()
     {
         direction = Horizontal::Norm;
@@ -117,7 +117,7 @@ struct Character
     }
     inline void Draw(Window& window)
     {
-        stateMachine.Draw(window, pos.x, pos.y, 3.5f, direction);
+        stateMachine.Draw(window, pos, 3.5f, direction);
         window.DrawText(32, 35, "HEALTH:" + std::to_string(health), 2.0f, {255, 255, 255, 255});
         window.DrawText(32, 63, "COINS:" + std::to_string(coins), 2.0f, {255, 255, 255, 255});
     }
@@ -142,7 +142,7 @@ struct Character
 
 struct EnemyDef
 {
-    EntityDef enemyDef;
+    EntityDef<Sprite> enemyDef;
     float size, healthBarOffset;
 };
 
@@ -232,7 +232,7 @@ std::unordered_map<EnemyType, EnemyDef*> defMap
 
 struct EnemyBase
 {
-    EntityStateMachine stateMachine;
+    EntityStateMachine<Sprite> stateMachine;
     Horizontal direction = Horizontal::Norm;
     float health = 100.0f;
     vec2f pos = 0.0f;
@@ -243,7 +243,7 @@ struct EnemyBase
     virtual void SetSpawnData(const vec2f& pos) = 0;
     inline void DrawSelf(Window& window)
     {
-        stateMachine.Draw(window, pos.x, pos.y, defMap.at(type)->size, direction);
+        stateMachine.Draw(window, pos, defMap.at(type)->size, direction);
         DrawHealth(pos.x, pos.y - defMap.at(type)->healthBarOffset, window, 50.0f, 10.0f, health);
     }
     inline void UpdateSelf(Character& character, float deltaTime)
@@ -511,7 +511,7 @@ struct Chest
 {
     std::unordered_map<PowerupType, Sprite> powerups;
     vec2f pos = vec2f(900.0f, 170.0f);
-    Animator animator;
+    Animator<Sprite> animator;
     float elapsedTime;
     enum class cUpdate
     {
