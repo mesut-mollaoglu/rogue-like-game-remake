@@ -3,7 +3,7 @@
 
 #include "../custom-game-engine/headers/includes.h"
 
-const Rect mapBound = 
+const Rect<float> mapBound = 
 {
     90.0f, 160.0f, 920.0f, 650.0f
 };
@@ -22,7 +22,7 @@ enum class PowerupType
     None
 };
 
-inline bool InBounds(vec2f pos, Rect rc)
+inline bool InBounds(vec2f pos, Rect<float> rc)
 {
     return rc.Contains(pos);
 }
