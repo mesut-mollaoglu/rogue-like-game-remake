@@ -5,7 +5,7 @@
 
 const Rect<float> mapBound = 
 {
-    90.0f, 160.0f, 920.0f, 650.0f
+    {90.0f, 160.0f}, {920.0f, 650.0f}
 };
 
 inline float Distance(vec2f v1, vec2f v2)
@@ -39,7 +39,7 @@ struct Character
     Character()
     {
         direction = Horizontal::Norm;
-        stateMachine.currState = "Idle";
+        stateMachine.currStateName = "Idle";
 
         stateMachine["Walking"].animator.AddFrame("assets\\character\\move\\frame-1.png");
         stateMachine["Walking"].animator.AddFrame("assets\\character\\move\\frame-2.png");
@@ -84,7 +84,7 @@ struct Character
     }
     inline void Movement(Window& window, float speed)
     {
-        const float dt = window.timer.deltaTime;
+        const float dt = window.GetDeltaTime();
         if(currPowerup == PowerupType::Speed) speed *= 2.0f;
         if(window.GetKey(GLFW_KEY_W) == Key::Held) pos.y -= speed * dt;
         if(window.GetKey(GLFW_KEY_S) == Key::Held) pos.y += speed * dt;
@@ -98,26 +98,26 @@ struct Character
             pos.x += speed * dt;
             if(direction == Horizontal::Flip) direction = Horizontal::Norm;
         }
-        if(pos.x < mapBound.sx) pos.x += speed * dt;
-        if(pos.x > mapBound.ex) pos.x -= speed * dt;
-        if(pos.y < mapBound.sy) pos.y += speed * dt;
-        if(pos.y > mapBound.ey) pos.y -= speed * dt;
+        if(pos.x < mapBound.start.x) pos.x += speed * dt;
+        if(pos.x > mapBound.end.x) pos.x -= speed * dt;
+        if(pos.y < mapBound.start.y) pos.y += speed * dt;
+        if(pos.y > mapBound.end.y) pos.y -= speed * dt;
     }
     inline void Dash(Window& window)
     {
         float dx = 600.0f * window.timer.deltaTime * (direction == Horizontal::Flip ? -1 : 1);
-        if((pos.x + dx) > mapBound.sx && (pos.x + dx) < mapBound.ex) pos.x += dx;
+        if((pos.x + dx) > mapBound.start.x && (pos.x + dx) < mapBound.end.x) pos.x += dx;
     }
     inline void Update(Window& window)
     {
         if(currPowerup == PowerupType::Health) health = maxHealth;
-        if(stateMachine.currState == "Walking") Movement(window, velocity);
-        else if(stateMachine.currState == "Dash") Dash(window);
+        if(stateMachine.currStateName == "Walking") Movement(window, velocity);
+        else if(stateMachine.currStateName == "Dash") Dash(window);
         stateMachine.Update(window);
     }
     inline void Draw(Window& window)
     {
-        stateMachine.Draw(window, pos, 3.5f, direction);
+        stateMachine.Draw(window, pos, 3.5f, 0.0f, direction);
         window.DrawText(32, 35, "HEALTH:" + std::to_string(health), 2.0f, {255, 255, 255, 255});
         window.DrawText(32, 63, "COINS:" + std::to_string(coins), 2.0f, {255, 255, 255, 255});
     }
@@ -133,7 +133,7 @@ struct Character
     {
         pos = 200.0f;
         health = maxHealth;
-        stateMachine.currState = "Idle";
+        stateMachine.currStateName = "Idle";
         direction = Horizontal::Norm;
         currPowerup = PowerupType::None;
     }
@@ -243,7 +243,7 @@ struct EnemyBase
     virtual void SetSpawnData(const vec2f& pos) = 0;
     inline void DrawSelf(Window& window)
     {
-        stateMachine.Draw(window, pos, defMap.at(type)->size, direction);
+        stateMachine.Draw(window, pos, defMap.at(type)->size, 0.0f, direction);
         DrawHealth(pos.x, pos.y - defMap.at(type)->healthBarOffset, window, 50.0f, 10.0f, health);
     }
     inline void UpdateSelf(Character& character, float deltaTime)
@@ -260,8 +260,8 @@ struct EnemyBase
     {
         if(GetDistance(character) < 100.0f)
         {
-            if(character.stateMachine.currState == "Attack") health -= 10.0f * deltaTime;
-            else if(character.stateMachine.currState == "Dash") health = 0.0f;
+            if(character.stateMachine.currStateName == "Attack") health -= 10.0f * deltaTime;
+            else if(character.stateMachine.currStateName == "Dash") health = 0.0f;
         }
     }
 };
@@ -276,14 +276,14 @@ struct Ghost : EnemyBase
         stateMachine.DefineState("Move", AnimUpdate::Loop, 0.2f);
         stateMachine.DefineState("Dead", AnimUpdate::Once, 0.2f);
         stateMachine.def = &defMap.at(type)->enemyDef;
-        stateMachine.currState = "Idle";
+        stateMachine.currStateName = "Idle";
     }
     inline void Update(Character& character, float deltaTime) override
     {
         float dist = GetDistance(character);
         if(dist <= 100.0f) stateMachine.SetState("Attack");
         else stateMachine.SetState((!InBounds(pos, mapBound) || dist < 1000.0f) ? "Move" : "Idle");
-        if(stateMachine.currState == "Move") Movement(character, deltaTime);
+        if(stateMachine.currStateName == "Move") Movement(character, deltaTime);
         UpdateSelf(character, deltaTime);
         GiveDamage(character, deltaTime);
     }
@@ -297,7 +297,7 @@ struct Ghost : EnemyBase
     inline void GiveDamage(Character& character, float deltaTime) override
     {
         if(health <= 0.0f && character.currPowerup == PowerupType::Shield) return;
-        if(GetDistance(character) < 100.0f &&  stateMachine.currState == "Attack") character.health -= deltaTime;
+        if(GetDistance(character) < 100.0f &&  stateMachine.currStateName == "Attack") character.health -= deltaTime;
     }
     inline void SetSpawnData(const vec2f& pos) override
     {
@@ -335,14 +335,14 @@ struct Ranged : EnemyBase
         stateMachine.DefineState("Attack", AnimUpdate::Once, 0.2f);
         stateMachine.DefineState("Dead", AnimUpdate::Once, 0.2f);
         stateMachine.def = &defMap.at(type)->enemyDef;
-        stateMachine.currState = "Spawn";
+        stateMachine.currStateName = "Spawn";
         ball.remove = true;
     }
     inline void Update(Character& character, float deltaTime) override
     {
         timeSinceAttack += deltaTime;
         stateMachine.SetState(timeSinceAttack < 5.0f ? "Idle" : "Attack");
-        if(stateMachine.currState == "Attack") Attack();
+        if(stateMachine.currStateName == "Attack") Attack();
         UpdateSelf(character, deltaTime);
         UpdateEnergyBall(character, deltaTime);
         GiveDamage(character, deltaTime);
@@ -352,7 +352,7 @@ struct Ranged : EnemyBase
         ball.pos = pos;
         ball.distanceCovered = 0.0f;
         ball.remove = false;
-        stateMachine.currState = "Idle";
+        stateMachine.currStateName = "Idle";
         timeSinceAttack = 0.0f;
     }
     inline void Draw(Window& window) override
@@ -391,7 +391,7 @@ struct EnemyWrapper
     bool remove = false;
     void Update(Character& character, float deltaTime)
     {
-        if(enemy->stateMachine.currState == "Dead") remove = enemy->stateMachine["Dead"].played;
+        if(enemy->stateMachine.currStateName == "Dead") remove = enemy->stateMachine["Dead"].played;
         int coinInc = remove ? (character.currPowerup == PowerupType::Money ? 3 : 1) : 0;
         character.coins += character.coinMultiplier * coinInc;
         enemy->Update(character, deltaTime);
@@ -417,8 +417,8 @@ inline void SpawnEnemy(std::vector<EnemyWrapper>& enemies, EnemyType enemyType, 
     }
     const float w = (float)window.GetWidth();
     const float h = (float)window.GetHeight();
-    float x = rand(mapBound.sx, mapBound.ex); 
-    float y = rand(mapBound.sy, mapBound.ey);
+    float x = rand(mapBound.start.x, mapBound.end.x); 
+    float y = rand(mapBound.start.y, mapBound.end.y);
     switch(spawnMap.at(enemyType))
     {
         case eSpawnType::Inside: break;
