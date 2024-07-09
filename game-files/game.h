@@ -22,6 +22,14 @@ enum class PowerupType
     None
 };
 
+enum class CharacterState
+{
+    Walking,
+    Idle,
+    Attack,
+    Dash
+};
+
 inline bool InBounds(vec2f pos, Rect<float> rc)
 {
     return rc.Contains(pos);
@@ -35,50 +43,50 @@ struct Character
     int coins, coinMultiplier;
     vec2f pos;
     Horizontal direction;
-    StateMachine<Sprite> stateMachine;
+    StateMachine<Sprite, CharacterState> stateMachine;
     Character()
     {
         direction = Horizontal::Norm;
-        stateMachine.currStateName = "Idle";
+        stateMachine.currStateName = CharacterState::Idle;
 
-        stateMachine["Walking"].animator.AddFrame("assets\\character\\move\\frame-1.png");
-        stateMachine["Walking"].animator.AddFrame("assets\\character\\move\\frame-2.png");
-        stateMachine["Walking"].animator.AddFrame("assets\\character\\move\\frame-3.png");
-        stateMachine["Walking"].animator.AddFrame("assets\\character\\move\\frame-4.png");
-        stateMachine["Walking"].animator.data.duration = 0.2f;
-        stateMachine["Walking"].animator.data.update = AnimUpdate::Loop;
-        stateMachine["Walking"].keys[GLFW_KEY_W] = Key::Held;
-        stateMachine["Walking"].keys[GLFW_KEY_A] = Key::Held;
-        stateMachine["Walking"].keys[GLFW_KEY_S] = Key::Held;
-        stateMachine["Walking"].keys[GLFW_KEY_D] = Key::Held;
+        stateMachine[CharacterState::Walking].animator.AddFrame("assets\\character\\move\\frame-1.png");
+        stateMachine[CharacterState::Walking].animator.AddFrame("assets\\character\\move\\frame-2.png");
+        stateMachine[CharacterState::Walking].animator.AddFrame("assets\\character\\move\\frame-3.png");
+        stateMachine[CharacterState::Walking].animator.AddFrame("assets\\character\\move\\frame-4.png");
+        stateMachine[CharacterState::Walking].animator.data.duration = 0.2f;
+        stateMachine[CharacterState::Walking].animator.data.update = AnimUpdate::Loop;
+        stateMachine[CharacterState::Walking].keys[GLFW_KEY_W] = Key::Held;
+        stateMachine[CharacterState::Walking].keys[GLFW_KEY_A] = Key::Held;
+        stateMachine[CharacterState::Walking].keys[GLFW_KEY_S] = Key::Held;
+        stateMachine[CharacterState::Walking].keys[GLFW_KEY_D] = Key::Held;
 
-        stateMachine["Idle"].animator.AddFrame("assets\\character\\idle\\frame-1.png");
-        stateMachine["Idle"].animator.AddFrame("assets\\character\\idle\\frame-2.png");
-        stateMachine["Idle"].animator.AddFrame("assets\\character\\idle\\frame-3.png");
-        stateMachine["Idle"].animator.AddFrame("assets\\character\\idle\\frame-4.png");
-        stateMachine["Idle"].animator.data.duration = 0.2f;
-        stateMachine["Idle"].animator.data.update = AnimUpdate::Loop;
+        stateMachine[CharacterState::Idle].animator.AddFrame("assets\\character\\idle\\frame-1.png");
+        stateMachine[CharacterState::Idle].animator.AddFrame("assets\\character\\idle\\frame-2.png");
+        stateMachine[CharacterState::Idle].animator.AddFrame("assets\\character\\idle\\frame-3.png");
+        stateMachine[CharacterState::Idle].animator.AddFrame("assets\\character\\idle\\frame-4.png");
+        stateMachine[CharacterState::Idle].animator.data.duration = 0.2f;
+        stateMachine[CharacterState::Idle].animator.data.update = AnimUpdate::Loop;
 
-        stateMachine["Dash"].animator.AddFrame("assets\\character\\dash\\frame-1.png");
-        stateMachine["Dash"].animator.AddFrame("assets\\character\\dash\\frame-2.png");
-        stateMachine["Dash"].animator.AddFrame("assets\\character\\dash\\frame-3.png");
-        stateMachine["Dash"].animator.AddFrame("assets\\character\\dash\\frame-4.png");
-        stateMachine["Dash"].animator.AddFrame("assets\\character\\dash\\frame-5.png");
-        stateMachine["Dash"].animator.AddFrame("assets\\character\\dash\\frame-6.png");
-        stateMachine["Dash"].animator.AddFrame("assets\\character\\dash\\frame-7.png");
-        stateMachine["Dash"].animator.AddFrame("assets\\character\\dash\\frame-8.png");
-        stateMachine["Dash"].animator.AddFrame("assets\\character\\dash\\frame-9.png");
-        stateMachine["Dash"].animator.data.duration = 0.04f;
-        stateMachine["Dash"].animator.data.update = AnimUpdate::Once;
-        stateMachine["Dash"].keys[GLFW_KEY_LEFT_SHIFT] = Key::Pressed;
+        stateMachine[CharacterState::Dash].animator.AddFrame("assets\\character\\dash\\frame-1.png");
+        stateMachine[CharacterState::Dash].animator.AddFrame("assets\\character\\dash\\frame-2.png");
+        stateMachine[CharacterState::Dash].animator.AddFrame("assets\\character\\dash\\frame-3.png");
+        stateMachine[CharacterState::Dash].animator.AddFrame("assets\\character\\dash\\frame-4.png");
+        stateMachine[CharacterState::Dash].animator.AddFrame("assets\\character\\dash\\frame-5.png");
+        stateMachine[CharacterState::Dash].animator.AddFrame("assets\\character\\dash\\frame-6.png");
+        stateMachine[CharacterState::Dash].animator.AddFrame("assets\\character\\dash\\frame-7.png");
+        stateMachine[CharacterState::Dash].animator.AddFrame("assets\\character\\dash\\frame-8.png");
+        stateMachine[CharacterState::Dash].animator.AddFrame("assets\\character\\dash\\frame-9.png");
+        stateMachine[CharacterState::Dash].animator.data.duration = 0.04f;
+        stateMachine[CharacterState::Dash].animator.data.update = AnimUpdate::Once;
+        stateMachine[CharacterState::Dash].keys[GLFW_KEY_LEFT_SHIFT] = Key::Pressed;
         
-        stateMachine["Attack"].animator.AddFrame("assets\\character\\attack\\frame-1.png");
-        stateMachine["Attack"].animator.AddFrame("assets\\character\\attack\\frame-2.png");
-        stateMachine["Attack"].animator.AddFrame("assets\\character\\attack\\frame-3.png");
-        stateMachine["Attack"].animator.AddFrame("assets\\character\\attack\\frame-4.png");
-        stateMachine["Attack"].animator.data.duration = 0.1f;
-        stateMachine["Attack"].animator.data.update = AnimUpdate::Once;
-        stateMachine["Attack"].mouse[GLFW_MOUSE_BUTTON_1] = Key::Pressed;
+        stateMachine[CharacterState::Attack].animator.AddFrame("assets\\character\\attack\\frame-1.png");
+        stateMachine[CharacterState::Attack].animator.AddFrame("assets\\character\\attack\\frame-2.png");
+        stateMachine[CharacterState::Attack].animator.AddFrame("assets\\character\\attack\\frame-3.png");
+        stateMachine[CharacterState::Attack].animator.AddFrame("assets\\character\\attack\\frame-4.png");
+        stateMachine[CharacterState::Attack].animator.data.duration = 0.1f;
+        stateMachine[CharacterState::Attack].animator.data.update = AnimUpdate::Once;
+        stateMachine[CharacterState::Attack].mouse[GLFW_MOUSE_BUTTON_1] = Key::Pressed;
     
         coins = 0;
     }
@@ -111,8 +119,8 @@ struct Character
     inline void Update(Window& window)
     {
         if(currPowerup == PowerupType::Health) health = maxHealth;
-        if(stateMachine.currStateName == "Walking") Movement(window, velocity);
-        else if(stateMachine.currStateName == "Dash") Dash(window);
+        if(stateMachine.currStateName == CharacterState::Walking) Movement(window, velocity);
+        else if(stateMachine.currStateName == CharacterState::Dash) Dash(window);
         stateMachine.Update(window);
     }
     inline void Draw(Window& window)
@@ -133,46 +141,56 @@ struct Character
     {
         pos = 200.0f;
         health = maxHealth;
-        stateMachine.currStateName = "Idle";
+        stateMachine.currStateName = CharacterState::Idle;
         direction = Horizontal::Norm;
         currPowerup = PowerupType::None;
     }
     ~Character() {}
 };
 
+enum class EnemyState
+{
+    Idle,
+    Attack,
+    Move,
+    Dead,
+    Spawn
+};
+
 struct EnemyDef
 {
-    EntityDef<Sprite> enemyDef;
+    EntityDef<Sprite, EnemyState> enemyDef;
     float size, healthBarOffset;
+    Sprite sprEnergyBall;
 };
 
 struct GhostDef : EnemyDef
 {
     GhostDef()
     {
-        enemyDef["Attack"].AddFrame("assets\\enemy\\attack\\frame-1.png");
-        enemyDef["Attack"].AddFrame("assets\\enemy\\attack\\frame-2.png");
-        enemyDef["Attack"].AddFrame("assets\\enemy\\attack\\frame-3.png");
-        enemyDef["Attack"].AddFrame("assets\\enemy\\attack\\frame-4.png");
-        enemyDef["Attack"].AddFrame("assets\\enemy\\attack\\frame-5.png");
-        enemyDef["Attack"].AddFrame("assets\\enemy\\attack\\frame-6.png");
-        enemyDef["Attack"].AddFrame("assets\\enemy\\attack\\frame-7.png");
-        enemyDef["Attack"].AddFrame("assets\\enemy\\attack\\frame-8.png");
-        enemyDef["Attack"].AddFrame("assets\\enemy\\attack\\frame-9.png");
-        enemyDef["Idle"].AddFrame("assets\\enemy\\idle\\frame-1.png");
-        enemyDef["Idle"].AddFrame("assets\\enemy\\idle\\frame-2.png");
-        enemyDef["Move"].AddFrame("assets\\enemy\\move\\frame-1.png");
-        enemyDef["Move"].AddFrame("assets\\enemy\\move\\frame-2.png");
-        enemyDef["Dead"].AddFrame("assets\\enemy\\dead\\frame-1.png");
-        enemyDef["Dead"].AddFrame("assets\\enemy\\dead\\frame-2.png");
-        enemyDef["Dead"].AddFrame("assets\\enemy\\dead\\frame-3.png");
-        enemyDef["Dead"].AddFrame("assets\\enemy\\dead\\frame-4.png");
-        enemyDef["Dead"].AddFrame("assets\\enemy\\dead\\frame-5.png");
-        enemyDef["Dead"].AddFrame("assets\\enemy\\dead\\frame-6.png");
-        enemyDef["Dead"].AddFrame("assets\\enemy\\dead\\frame-7.png");
-        enemyDef["Dead"].AddFrame("assets\\enemy\\dead\\frame-8.png");
-        enemyDef["Dead"].AddFrame("assets\\enemy\\dead\\frame-9.png");
-        enemyDef["Dead"].AddFrame("assets\\enemy\\dead\\frame-10.png");
+        enemyDef[EnemyState::Attack].AddFrame("assets\\enemy\\attack\\frame-1.png");
+        enemyDef[EnemyState::Attack].AddFrame("assets\\enemy\\attack\\frame-2.png");
+        enemyDef[EnemyState::Attack].AddFrame("assets\\enemy\\attack\\frame-3.png");
+        enemyDef[EnemyState::Attack].AddFrame("assets\\enemy\\attack\\frame-4.png");
+        enemyDef[EnemyState::Attack].AddFrame("assets\\enemy\\attack\\frame-5.png");
+        enemyDef[EnemyState::Attack].AddFrame("assets\\enemy\\attack\\frame-6.png");
+        enemyDef[EnemyState::Attack].AddFrame("assets\\enemy\\attack\\frame-7.png");
+        enemyDef[EnemyState::Attack].AddFrame("assets\\enemy\\attack\\frame-8.png");
+        enemyDef[EnemyState::Attack].AddFrame("assets\\enemy\\attack\\frame-9.png");
+        enemyDef[EnemyState::Idle].AddFrame("assets\\enemy\\idle\\frame-1.png");
+        enemyDef[EnemyState::Idle].AddFrame("assets\\enemy\\idle\\frame-2.png");
+        enemyDef[EnemyState::Move].AddFrame("assets\\enemy\\move\\frame-1.png");
+        enemyDef[EnemyState::Move].AddFrame("assets\\enemy\\move\\frame-2.png");
+        enemyDef[EnemyState::Dead].AddFrame("assets\\enemy\\dead\\frame-1.png");
+        enemyDef[EnemyState::Dead].AddFrame("assets\\enemy\\dead\\frame-2.png");
+        enemyDef[EnemyState::Dead].AddFrame("assets\\enemy\\dead\\frame-3.png");
+        enemyDef[EnemyState::Dead].AddFrame("assets\\enemy\\dead\\frame-4.png");
+        enemyDef[EnemyState::Dead].AddFrame("assets\\enemy\\dead\\frame-5.png");
+        enemyDef[EnemyState::Dead].AddFrame("assets\\enemy\\dead\\frame-6.png");
+        enemyDef[EnemyState::Dead].AddFrame("assets\\enemy\\dead\\frame-7.png");
+        enemyDef[EnemyState::Dead].AddFrame("assets\\enemy\\dead\\frame-8.png");
+        enemyDef[EnemyState::Dead].AddFrame("assets\\enemy\\dead\\frame-9.png");
+        enemyDef[EnemyState::Dead].AddFrame("assets\\enemy\\dead\\frame-10.png");
         healthBarOffset = 100.0f;
         size = 4.5f;
     }
@@ -182,24 +200,24 @@ struct RangedDef : EnemyDef
 {
     RangedDef()
     {
-        enemyDef["Attack"].AddFrame("assets\\ranged-enemy\\attack\\frame-0.png");
-        enemyDef["Attack"].AddFrame("assets\\ranged-enemy\\attack\\frame-1.png");
-        enemyDef["Attack"].AddFrame("assets\\ranged-enemy\\attack\\frame-2.png");
-        enemyDef["Idle"].AddFrame("assets\\ranged-enemy\\idle\\frame-1.png");
-        enemyDef["Idle"].AddFrame("assets\\ranged-enemy\\idle\\frame-2.png");
-        enemyDef["Dead"].AddFrame("assets\\ranged-enemy\\dead\\frame-0.png");
-        enemyDef["Dead"].AddFrame("assets\\ranged-enemy\\dead\\frame-1.png");
-        enemyDef["Dead"].AddFrame("assets\\ranged-enemy\\dead\\frame-2.png");
-        enemyDef["Dead"].AddFrame("assets\\ranged-enemy\\dead\\frame-3.png");
-        enemyDef["Dead"].AddFrame("assets\\ranged-enemy\\dead\\frame-4.png");
-        enemyDef["Dead"].AddFrame("assets\\ranged-enemy\\dead\\frame-5.png");
-        enemyDef["Spawn"].AddFrame("assets\\ranged-enemy\\spawn\\frame-0.png");
-        enemyDef["Spawn"].AddFrame("assets\\ranged-enemy\\spawn\\frame-1.png");
-        enemyDef["Spawn"].AddFrame("assets\\ranged-enemy\\spawn\\frame-2.png");
-        enemyDef["Spawn"].AddFrame("assets\\ranged-enemy\\spawn\\frame-3.png");
-        enemyDef["Spawn"].AddFrame("assets\\ranged-enemy\\spawn\\frame-4.png");
-        enemyDef["Spawn"].AddFrame("assets\\ranged-enemy\\spawn\\frame-5.png");
-        enemyDef["Energy"].AddFrame("assets\\ranged-enemy\\energy-ball.png");
+        enemyDef[EnemyState::Attack].AddFrame("assets\\ranged-enemy\\attack\\frame-0.png");
+        enemyDef[EnemyState::Attack].AddFrame("assets\\ranged-enemy\\attack\\frame-1.png");
+        enemyDef[EnemyState::Attack].AddFrame("assets\\ranged-enemy\\attack\\frame-2.png");
+        enemyDef[EnemyState::Idle].AddFrame("assets\\ranged-enemy\\idle\\frame-1.png");
+        enemyDef[EnemyState::Idle].AddFrame("assets\\ranged-enemy\\idle\\frame-2.png");
+        enemyDef[EnemyState::Dead].AddFrame("assets\\ranged-enemy\\dead\\frame-0.png");
+        enemyDef[EnemyState::Dead].AddFrame("assets\\ranged-enemy\\dead\\frame-1.png");
+        enemyDef[EnemyState::Dead].AddFrame("assets\\ranged-enemy\\dead\\frame-2.png");
+        enemyDef[EnemyState::Dead].AddFrame("assets\\ranged-enemy\\dead\\frame-3.png");
+        enemyDef[EnemyState::Dead].AddFrame("assets\\ranged-enemy\\dead\\frame-4.png");
+        enemyDef[EnemyState::Dead].AddFrame("assets\\ranged-enemy\\dead\\frame-5.png");
+        enemyDef[EnemyState::Spawn].AddFrame("assets\\ranged-enemy\\spawn\\frame-0.png");
+        enemyDef[EnemyState::Spawn].AddFrame("assets\\ranged-enemy\\spawn\\frame-1.png");
+        enemyDef[EnemyState::Spawn].AddFrame("assets\\ranged-enemy\\spawn\\frame-2.png");
+        enemyDef[EnemyState::Spawn].AddFrame("assets\\ranged-enemy\\spawn\\frame-3.png");
+        enemyDef[EnemyState::Spawn].AddFrame("assets\\ranged-enemy\\spawn\\frame-4.png");
+        enemyDef[EnemyState::Spawn].AddFrame("assets\\ranged-enemy\\spawn\\frame-5.png");
+        sprEnergyBall = Sprite("assets\\ranged-enemy\\energy-ball.png");
         healthBarOffset = 80.0f;
         size = 3.5f;
     }
@@ -232,7 +250,7 @@ std::unordered_map<EnemyType, EnemyDef*> defMap
 
 struct EnemyBase
 {
-    EntityStateMachine<Sprite> stateMachine;
+    EntityStateMachine<Sprite, EnemyState> stateMachine;
     Horizontal direction = Horizontal::Norm;
     float health = 100.0f;
     vec2f pos = 0.0f;
@@ -248,7 +266,7 @@ struct EnemyBase
     }
     inline void UpdateSelf(Character& character, float deltaTime)
     {
-        if(health <= 0.0f) stateMachine.SetState("Dead");
+        if(health <= 0.0f) stateMachine.SetState(EnemyState::Dead);
         else TakeDamage(character, deltaTime);
         stateMachine.Update(deltaTime);
     }
@@ -260,8 +278,8 @@ struct EnemyBase
     {
         if(GetDistance(character) < 100.0f)
         {
-            if(character.stateMachine.currStateName == "Attack") health -= 10.0f * deltaTime;
-            else if(character.stateMachine.currStateName == "Dash") health = 0.0f;
+            if(character.stateMachine.currStateName == CharacterState::Attack) health -= 10.0f * deltaTime;
+            else if(character.stateMachine.currStateName == CharacterState::Dash) health = 0.0f;
         }
     }
 };
@@ -271,19 +289,19 @@ struct Ghost : EnemyBase
     Ghost()
     {
         type = EnemyType::Ghost;
-        stateMachine.DefineState("Idle", AnimUpdate::Loop, 0.2f);
-        stateMachine.DefineState("Attack", AnimUpdate::Once, 0.2f);
-        stateMachine.DefineState("Move", AnimUpdate::Loop, 0.2f);
-        stateMachine.DefineState("Dead", AnimUpdate::Once, 0.2f);
+        stateMachine.DefineState(EnemyState::Idle, AnimUpdate::Loop, 0.2f);
+        stateMachine.DefineState(EnemyState::Attack, AnimUpdate::Once, 0.2f);
+        stateMachine.DefineState(EnemyState::Move, AnimUpdate::Loop, 0.2f);
+        stateMachine.DefineState(EnemyState::Dead, AnimUpdate::Once, 0.2f);
         stateMachine.def = &defMap.at(type)->enemyDef;
-        stateMachine.currStateName = "Idle";
+        stateMachine.currStateName = EnemyState::Idle;
     }
     inline void Update(Character& character, float deltaTime) override
     {
         float dist = GetDistance(character);
-        if(dist <= 100.0f) stateMachine.SetState("Attack");
-        else stateMachine.SetState((!InBounds(pos, mapBound) || dist < 1000.0f) ? "Move" : "Idle");
-        if(stateMachine.currStateName == "Move") Movement(character, deltaTime);
+        if(dist <= 100.0f) stateMachine.SetState(EnemyState::Attack);
+        else stateMachine.SetState((!InBounds(pos, mapBound) || dist < 1000.0f) ? EnemyState::Move : EnemyState::Idle);
+        if(stateMachine.currStateName == EnemyState::Move) Movement(character, deltaTime);
         UpdateSelf(character, deltaTime);
         GiveDamage(character, deltaTime);
     }
@@ -297,7 +315,7 @@ struct Ghost : EnemyBase
     inline void GiveDamage(Character& character, float deltaTime) override
     {
         if(health <= 0.0f && character.currPowerup == PowerupType::Shield) return;
-        if(GetDistance(character) < 100.0f &&  stateMachine.currStateName == "Attack") character.health -= deltaTime;
+        if(GetDistance(character) < 100.0f &&  stateMachine.currStateName == EnemyState::Attack) character.health -= deltaTime;
     }
     inline void SetSpawnData(const vec2f& pos) override
     {
@@ -330,19 +348,19 @@ struct Ranged : EnemyBase
     {
         type = EnemyType::Ranged;
         timeSinceAttack = 0.0f;
-        stateMachine.DefineState("Idle", AnimUpdate::Loop, 0.2f);
-        stateMachine.DefineState("Spawn", AnimUpdate::Once, 0.2f);
-        stateMachine.DefineState("Attack", AnimUpdate::Once, 0.2f);
-        stateMachine.DefineState("Dead", AnimUpdate::Once, 0.2f);
+        stateMachine.DefineState(EnemyState::Idle, AnimUpdate::Loop, 0.2f);
+        stateMachine.DefineState(EnemyState::Spawn, AnimUpdate::Once, 0.2f);
+        stateMachine.DefineState(EnemyState::Attack, AnimUpdate::Once, 0.2f);
+        stateMachine.DefineState(EnemyState::Dead, AnimUpdate::Once, 0.2f);
         stateMachine.def = &defMap.at(type)->enemyDef;
-        stateMachine.currStateName = "Spawn";
+        stateMachine.currStateName = EnemyState::Spawn;
         ball.remove = true;
     }
     inline void Update(Character& character, float deltaTime) override
     {
         timeSinceAttack += deltaTime;
-        stateMachine.SetState(timeSinceAttack < 5.0f ? "Idle" : "Attack");
-        if(stateMachine.currStateName == "Attack") Attack();
+        stateMachine.SetState(timeSinceAttack < 5.0f ? EnemyState::Idle : EnemyState::Attack);
+        if(stateMachine.currStateName == EnemyState::Attack) Attack();
         UpdateSelf(character, deltaTime);
         UpdateEnergyBall(character, deltaTime);
         GiveDamage(character, deltaTime);
@@ -352,7 +370,7 @@ struct Ranged : EnemyBase
         ball.pos = pos;
         ball.distanceCovered = 0.0f;
         ball.remove = false;
-        stateMachine.currStateName = "Idle";
+        stateMachine.currStateName = EnemyState::Idle;
         timeSinceAttack = 0.0f;
     }
     inline void Draw(Window& window) override
@@ -373,7 +391,7 @@ struct Ranged : EnemyBase
     inline void DrawEnergyBall(Window& window) 
     {
         if(!ball.remove) 
-            window.DrawSprite(ball.pos.x, ball.pos.y, stateMachine.GetFrameList("Energy")[0], 5.0f);
+            window.DrawSprite(ball.pos.x, ball.pos.y, defMap.at(type)->sprEnergyBall, 5.0f);
     }
     inline void UpdateEnergyBall(Character& character, float deltaTime)
     {
@@ -391,7 +409,7 @@ struct EnemyWrapper
     bool remove = false;
     void Update(Character& character, float deltaTime)
     {
-        if(enemy->stateMachine.currStateName == "Dead") remove = enemy->stateMachine["Dead"].played;
+        if(enemy->stateMachine.currStateName == EnemyState::Dead) remove = enemy->stateMachine[EnemyState::Dead].played;
         int coinInc = remove ? (character.currPowerup == PowerupType::Money ? 3 : 1) : 0;
         character.coins += character.coinMultiplier * coinInc;
         enemy->Update(character, deltaTime);
