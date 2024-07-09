@@ -94,7 +94,7 @@ public:
 
         market.ResetCharacter(character);
 
-        ps.particles.clear();
+        ps.Clear();
     }
     inline void DrawAndUpdate(Window& window)
     {
