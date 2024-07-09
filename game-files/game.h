@@ -51,27 +51,27 @@ struct Character
         
         def = new EntityDef<Sprite, CharacterState>();
 
-        def->AddFrame(CharacterState::Walking, "assets\\character\\move\\frame-1.png");
-        def->AddFrame(CharacterState::Walking, "assets\\character\\move\\frame-2.png");
-        def->AddFrame(CharacterState::Walking, "assets\\character\\move\\frame-3.png");
-        def->AddFrame(CharacterState::Walking, "assets\\character\\move\\frame-4.png");
-        def->AddFrame(CharacterState::Idle, "assets\\character\\idle\\frame-1.png");
-        def->AddFrame(CharacterState::Idle, "assets\\character\\idle\\frame-2.png");
-        def->AddFrame(CharacterState::Idle, "assets\\character\\idle\\frame-3.png");
-        def->AddFrame(CharacterState::Idle, "assets\\character\\idle\\frame-4.png");
-        def->AddFrame(CharacterState::Dash, "assets\\character\\dash\\frame-1.png");
-        def->AddFrame(CharacterState::Dash, "assets\\character\\dash\\frame-2.png");
-        def->AddFrame(CharacterState::Dash, "assets\\character\\dash\\frame-3.png");
-        def->AddFrame(CharacterState::Dash, "assets\\character\\dash\\frame-4.png");
-        def->AddFrame(CharacterState::Dash, "assets\\character\\dash\\frame-5.png");
-        def->AddFrame(CharacterState::Dash, "assets\\character\\dash\\frame-6.png");
-        def->AddFrame(CharacterState::Dash, "assets\\character\\dash\\frame-7.png");
-        def->AddFrame(CharacterState::Dash, "assets\\character\\dash\\frame-8.png");
-        def->AddFrame(CharacterState::Dash, "assets\\character\\dash\\frame-9.png");
-        def->AddFrame(CharacterState::Attack, "assets\\character\\attack\\frame-1.png");
-        def->AddFrame(CharacterState::Attack, "assets\\character\\attack\\frame-2.png");
-        def->AddFrame(CharacterState::Attack, "assets\\character\\attack\\frame-3.png");
-        def->AddFrame(CharacterState::Attack, "assets\\character\\attack\\frame-4.png");
+        def->operator[](CharacterState::Walking).AddFrame("assets\\character\\move\\frame-1.png");
+        def->operator[](CharacterState::Walking).AddFrame("assets\\character\\move\\frame-2.png");
+        def->operator[](CharacterState::Walking).AddFrame("assets\\character\\move\\frame-3.png");
+        def->operator[](CharacterState::Walking).AddFrame("assets\\character\\move\\frame-4.png");
+        def->operator[](CharacterState::Idle).AddFrame("assets\\character\\idle\\frame-1.png");
+        def->operator[](CharacterState::Idle).AddFrame("assets\\character\\idle\\frame-2.png");
+        def->operator[](CharacterState::Idle).AddFrame("assets\\character\\idle\\frame-3.png");
+        def->operator[](CharacterState::Idle).AddFrame("assets\\character\\idle\\frame-4.png");
+        def->operator[](CharacterState::Dash).AddFrame("assets\\character\\dash\\frame-1.png");
+        def->operator[](CharacterState::Dash).AddFrame("assets\\character\\dash\\frame-2.png");
+        def->operator[](CharacterState::Dash).AddFrame("assets\\character\\dash\\frame-3.png");
+        def->operator[](CharacterState::Dash).AddFrame("assets\\character\\dash\\frame-4.png");
+        def->operator[](CharacterState::Dash).AddFrame("assets\\character\\dash\\frame-5.png");
+        def->operator[](CharacterState::Dash).AddFrame("assets\\character\\dash\\frame-6.png");
+        def->operator[](CharacterState::Dash).AddFrame("assets\\character\\dash\\frame-7.png");
+        def->operator[](CharacterState::Dash).AddFrame("assets\\character\\dash\\frame-8.png");
+        def->operator[](CharacterState::Dash).AddFrame("assets\\character\\dash\\frame-9.png");
+        def->operator[](CharacterState::Attack).AddFrame("assets\\character\\attack\\frame-1.png");
+        def->operator[](CharacterState::Attack).AddFrame("assets\\character\\attack\\frame-2.png");
+        def->operator[](CharacterState::Attack).AddFrame("assets\\character\\attack\\frame-3.png");
+        def->operator[](CharacterState::Attack).AddFrame("assets\\character\\attack\\frame-4.png");
         
         stateMachine.DefineState(CharacterState::Walking, AnimUpdate::Loop, 0.2f);
         stateMachine.DefineState(CharacterState::Idle, AnimUpdate::Loop, 0.2f);
