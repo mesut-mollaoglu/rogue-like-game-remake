@@ -44,54 +44,48 @@ struct Character
     vec2f pos;
     Horizontal direction;
     StateMachine<Sprite, CharacterState> stateMachine;
+    EntityDef<Sprite, CharacterState>* def;
     Character()
     {
         direction = Horizontal::Norm;
+        
+        def = new EntityDef<Sprite, CharacterState>();
+
+        def->AddFrame(CharacterState::Walking, "assets\\character\\move\\frame-1.png");
+        def->AddFrame(CharacterState::Walking, "assets\\character\\move\\frame-2.png");
+        def->AddFrame(CharacterState::Walking, "assets\\character\\move\\frame-3.png");
+        def->AddFrame(CharacterState::Walking, "assets\\character\\move\\frame-4.png");
+        def->AddFrame(CharacterState::Idle, "assets\\character\\idle\\frame-1.png");
+        def->AddFrame(CharacterState::Idle, "assets\\character\\idle\\frame-2.png");
+        def->AddFrame(CharacterState::Idle, "assets\\character\\idle\\frame-3.png");
+        def->AddFrame(CharacterState::Idle, "assets\\character\\idle\\frame-4.png");
+        def->AddFrame(CharacterState::Dash, "assets\\character\\dash\\frame-1.png");
+        def->AddFrame(CharacterState::Dash, "assets\\character\\dash\\frame-2.png");
+        def->AddFrame(CharacterState::Dash, "assets\\character\\dash\\frame-3.png");
+        def->AddFrame(CharacterState::Dash, "assets\\character\\dash\\frame-4.png");
+        def->AddFrame(CharacterState::Dash, "assets\\character\\dash\\frame-5.png");
+        def->AddFrame(CharacterState::Dash, "assets\\character\\dash\\frame-6.png");
+        def->AddFrame(CharacterState::Dash, "assets\\character\\dash\\frame-7.png");
+        def->AddFrame(CharacterState::Dash, "assets\\character\\dash\\frame-8.png");
+        def->AddFrame(CharacterState::Dash, "assets\\character\\dash\\frame-9.png");
+        def->AddFrame(CharacterState::Attack, "assets\\character\\attack\\frame-1.png");
+        def->AddFrame(CharacterState::Attack, "assets\\character\\attack\\frame-2.png");
+        def->AddFrame(CharacterState::Attack, "assets\\character\\attack\\frame-3.png");
+        def->AddFrame(CharacterState::Attack, "assets\\character\\attack\\frame-4.png");
+        
+        stateMachine.DefineState(CharacterState::Walking, AnimUpdate::Loop, 0.2f);
+        stateMachine.DefineState(CharacterState::Idle, AnimUpdate::Loop, 0.2f);
+        stateMachine.DefineState(CharacterState::Attack, AnimUpdate::Once, 0.1f);
+        stateMachine.DefineState(CharacterState::Dash, AnimUpdate::Once, 0.04f);
+        stateMachine.def = def;
+
         stateMachine.currStateName = CharacterState::Idle;
 
-        stateMachine[CharacterState::Walking].animator.AddFrame("assets\\character\\move\\frame-1.png");
-        stateMachine[CharacterState::Walking].animator.AddFrame("assets\\character\\move\\frame-2.png");
-        stateMachine[CharacterState::Walking].animator.AddFrame("assets\\character\\move\\frame-3.png");
-        stateMachine[CharacterState::Walking].animator.AddFrame("assets\\character\\move\\frame-4.png");
-        stateMachine[CharacterState::Walking].animator.data.duration = 0.2f;
-        stateMachine[CharacterState::Walking].animator.data.update = AnimUpdate::Loop;
-        stateMachine[CharacterState::Walking].keys[GLFW_KEY_W] = Key::Held;
-        stateMachine[CharacterState::Walking].keys[GLFW_KEY_A] = Key::Held;
-        stateMachine[CharacterState::Walking].keys[GLFW_KEY_S] = Key::Held;
-        stateMachine[CharacterState::Walking].keys[GLFW_KEY_D] = Key::Held;
-
-        stateMachine[CharacterState::Idle].animator.AddFrame("assets\\character\\idle\\frame-1.png");
-        stateMachine[CharacterState::Idle].animator.AddFrame("assets\\character\\idle\\frame-2.png");
-        stateMachine[CharacterState::Idle].animator.AddFrame("assets\\character\\idle\\frame-3.png");
-        stateMachine[CharacterState::Idle].animator.AddFrame("assets\\character\\idle\\frame-4.png");
-        stateMachine[CharacterState::Idle].animator.data.duration = 0.2f;
-        stateMachine[CharacterState::Idle].animator.data.update = AnimUpdate::Loop;
-
-        stateMachine[CharacterState::Dash].animator.AddFrame("assets\\character\\dash\\frame-1.png");
-        stateMachine[CharacterState::Dash].animator.AddFrame("assets\\character\\dash\\frame-2.png");
-        stateMachine[CharacterState::Dash].animator.AddFrame("assets\\character\\dash\\frame-3.png");
-        stateMachine[CharacterState::Dash].animator.AddFrame("assets\\character\\dash\\frame-4.png");
-        stateMachine[CharacterState::Dash].animator.AddFrame("assets\\character\\dash\\frame-5.png");
-        stateMachine[CharacterState::Dash].animator.AddFrame("assets\\character\\dash\\frame-6.png");
-        stateMachine[CharacterState::Dash].animator.AddFrame("assets\\character\\dash\\frame-7.png");
-        stateMachine[CharacterState::Dash].animator.AddFrame("assets\\character\\dash\\frame-8.png");
-        stateMachine[CharacterState::Dash].animator.AddFrame("assets\\character\\dash\\frame-9.png");
-        stateMachine[CharacterState::Dash].animator.data.duration = 0.04f;
-        stateMachine[CharacterState::Dash].animator.data.update = AnimUpdate::Once;
-        stateMachine[CharacterState::Dash].keys[GLFW_KEY_LEFT_SHIFT] = Key::Pressed;
-        
-        stateMachine[CharacterState::Attack].animator.AddFrame("assets\\character\\attack\\frame-1.png");
-        stateMachine[CharacterState::Attack].animator.AddFrame("assets\\character\\attack\\frame-2.png");
-        stateMachine[CharacterState::Attack].animator.AddFrame("assets\\character\\attack\\frame-3.png");
-        stateMachine[CharacterState::Attack].animator.AddFrame("assets\\character\\attack\\frame-4.png");
-        stateMachine[CharacterState::Attack].animator.data.duration = 0.1f;
-        stateMachine[CharacterState::Attack].animator.data.update = AnimUpdate::Once;
-        stateMachine[CharacterState::Attack].mouse[GLFW_MOUSE_BUTTON_1] = Key::Pressed;
-    
         coins = 0;
     }
     inline void Movement(Window& window, float speed)
     {
+        if(stateMachine.currStateName != CharacterState::Walking) return;
         const float dt = window.GetDeltaTime();
         if(currPowerup == PowerupType::Speed) speed *= 2.0f;
         if(window.GetKey(GLFW_KEY_W) == Key::Held) pos.y -= speed * dt;
@@ -113,15 +107,20 @@ struct Character
     }
     inline void Dash(Window& window)
     {
+        if(stateMachine.currStateName != CharacterState::Dash) return;
         float dx = 600.0f * window.timer.deltaTime * (direction == Horizontal::Flip ? -1 : 1);
         if((pos.x + dx) > mapBound.start.x && (pos.x + dx) < mapBound.end.x) pos.x += dx;
     }
     inline void Update(Window& window)
     {
         if(currPowerup == PowerupType::Health) health = maxHealth;
-        if(stateMachine.currStateName == CharacterState::Walking) Movement(window, velocity);
-        else if(stateMachine.currStateName == CharacterState::Dash) Dash(window);
-        stateMachine.Update(window);
+        if(window.GetKey(GLFW_KEY_LEFT_SHIFT) == Key::Pressed) stateMachine.SetState(CharacterState::Dash);
+        if(window.GetMouseButton(GLFW_MOUSE_BUTTON_1) == Key::Pressed) stateMachine.SetState(CharacterState::Attack);
+        stateMachine.SetState((window.GetKey(GLFW_KEY_A) == Key::Held || window.GetKey(GLFW_KEY_W) == Key::Held || 
+        window.GetKey(GLFW_KEY_S) == Key::Held || window.GetKey(GLFW_KEY_D) == Key::Held) ? CharacterState::Walking : CharacterState::Idle);
+        Movement(window, velocity);
+        Dash(window);
+        stateMachine.Update(window.GetDeltaTime());
     }
     inline void Draw(Window& window)
     {
@@ -250,7 +249,7 @@ std::unordered_map<EnemyType, EnemyDef*> defMap
 
 struct EnemyBase
 {
-    EntityStateMachine<Sprite, EnemyState> stateMachine;
+    StateMachine<Sprite, EnemyState> stateMachine;
     Horizontal direction = Horizontal::Norm;
     float health = 100.0f;
     vec2f pos = 0.0f;
