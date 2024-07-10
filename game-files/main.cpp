@@ -147,7 +147,7 @@ public:
         window.Clear({0, 0, 0, 255});
 
         menuManager.Draw(window);
-
+        
         batch.Draw(menuBackgroundSprite, window.GetViewport()); 
     }
     inline void MarketDrawAndUpdate(Window& window)
