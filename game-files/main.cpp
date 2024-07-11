@@ -80,6 +80,12 @@ public:
 
         waveController.Reset();
 
+        const mat3x3f mat = translate_mat_2d(vec2f{2.0f, 3.0f}) * rotate_mat_2d(0.2f) * scale_mat_2d(vec2f{15.0f, 3.0f});
+
+        std::cout << translation_from_mat_2d(mat) << std::endl;
+        std::cout << rotation_from_mat_2d(mat) << std::endl;
+        std::cout << scale_from_mat_2d(mat);
+
         menuManager.Close();
 
         Restart();
