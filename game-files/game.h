@@ -100,16 +100,16 @@ struct Character
             pos.x += speed * dt;
             if(direction == Horizontal::Flip) direction = Horizontal::Norm;
         }
-        if(pos.x < mapBound.start.x) pos.x += speed * dt;
-        if(pos.x > mapBound.end.x) pos.x -= speed * dt;
-        if(pos.y < mapBound.start.y) pos.y += speed * dt;
-        if(pos.y > mapBound.end.y) pos.y -= speed * dt;
+        if(pos.x < mapBound.pos.x) pos.x += speed * dt;
+        if(pos.x > mapBound.pos.x + mapBound.size.x) pos.x -= speed * dt;
+        if(pos.y < mapBound.pos.y) pos.y += speed * dt;
+        if(pos.y > mapBound.pos.y + mapBound.size.y) pos.y -= speed * dt;
     }
     inline void Dash(Window& window)
     {
         if(stateMachine.currStateName != CharacterState::Dash) return;
         float dx = 600.0f * window.timer.deltaTime * (direction == Horizontal::Flip ? -1 : 1);
-        if((pos.x + dx) > mapBound.start.x && (pos.x + dx) < mapBound.end.x) pos.x += dx;
+        if((pos.x + dx) > mapBound.pos.x && (pos.x + dx) < mapBound.pos.x + mapBound.size.x) pos.x += dx;
     }
     inline void Update(Window& window)
     {
@@ -432,21 +432,19 @@ inline void SpawnEnemy(std::vector<EnemyWrapper>& enemies, EnemyType enemyType, 
         case EnemyType::Ghost: enemies.push_back({new Ghost()}); break;
         case EnemyType::Ranged: enemies.push_back({new Ranged()}); break;
     }
-    const float w = (float)window.GetWidth();
-    const float h = (float)window.GetHeight();
-    float x = rand(mapBound.start.x, mapBound.end.x); 
-    float y = rand(mapBound.start.y, mapBound.end.y);
+    const vec2f scrSize = window.GetScrSize();
+    vec2f pos = RndVec(mapBound);
     switch(spawnMap.at(enemyType))
     {
         case eSpawnType::Inside: break;
         case eSpawnType::Outside:
         {
-            x += rand(0, 2) ? w : -w;
-            y += rand(0, 2) ? 0 : h;
+            pos.x += rand(0, 2) ? scrSize.w : -scrSize.w;
+            pos.y += rand(0, 2) ? 0 : scrSize.h;
         }
         break;
     }
-    enemies.back().enemy->SetSpawnData({x, y});
+    enemies.back().enemy->SetSpawnData(pos);
 }
 
 enum class SpawnSystemState
@@ -518,7 +516,7 @@ struct WaveSystem
     inline void Draw(Window& window)
     {
         window.DrawText(window.GetWidth() * 0.5f, 30, "WAVE " + std::to_string(currentWave), 3.0f,
-            (spawnSystem == SpawnSystemState::Cooldown) ? Color{255, 255, 255, 255} : Color{255, 0, 0, 255}, 0.5f);
+            (spawnSystem == SpawnSystemState::Cooldown) ? Color{255, 255, 255, 255} : Color{255, 0, 0, 255}, {0.5f, 0.0f});
     
         for(auto& enemy : enemies) enemy.Draw(window);
     }

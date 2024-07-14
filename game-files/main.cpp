@@ -65,7 +65,7 @@ public:
         gameOverMenu["Retry"].id = (int32_t)Gamestate::Main;
         gameOverMenu["Main Menu"].id = (int32_t)Gamestate::MainMenu;
         gameOverMenu.position = window.GetScrSize() * 0.5f;
-        gameOverMenu.textOffset = 0.5f;
+        gameOverMenu.textOrigin = {0.5f, 0.0f};
         gameOverMenu.tableSize = {1, 2};
         gameOverMenu.size = 4.0f;
         gameOverMenu.BuildMenu();
@@ -73,7 +73,7 @@ public:
         pauseMenu["Main Menu"].id = (int32_t)Gamestate::MainMenu;
         pauseMenu["Resume"].id = (int32_t)Gamestate::Main;
         pauseMenu.position = window.GetScrSize() * 0.5f;
-        pauseMenu.textOffset = 0.5f;
+        pauseMenu.textOrigin = {0.5f, 0.0f};
         pauseMenu.tableSize = {1, 2};
         pauseMenu.size = 4.0f;
         pauseMenu.BuildMenu();
