@@ -433,7 +433,7 @@ inline void SpawnEnemy(std::vector<EnemyWrapper>& enemies, EnemyType enemyType, 
         case EnemyType::Ranged: enemies.push_back({new Ranged()}); break;
     }
     const vec2f scrSize = window.GetScrSize();
-    vec2f pos = RndVec(mapBound);
+    vec2f pos = RndPoint(mapBound);
     switch(spawnMap.at(enemyType))
     {
         case eSpawnType::Inside: break;
