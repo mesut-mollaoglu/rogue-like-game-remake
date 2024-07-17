@@ -5,7 +5,7 @@
 
 const Rect<float> mapBound = 
 {
-    {90.0f, 160.0f}, {920.0f, 650.0f}
+    {90.0f, 160.0f}, {830.0f, 490.0f}
 };
 
 inline float Distance(vec2f v1, vec2f v2)
