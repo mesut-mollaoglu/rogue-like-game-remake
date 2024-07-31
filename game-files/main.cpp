@@ -13,7 +13,7 @@ enum class Gamestate
     Exit
 };
 
-class Game
+class Game : public Window
 {
 private:
     Character character;
@@ -31,12 +31,11 @@ private:
     Menu gameOverMenu;
     Menu pauseMenu;
 public:
-    inline Game() = default;
-    inline Game(Window& window)
+    inline void UserStart() override
     {
         srand(time(0));
 
-        batch = SpriteBatch(&window);
+        batch = SpriteBatch(this);
 
         Deserialize(config, "datafile.txt");
 
@@ -56,7 +55,7 @@ public:
         menu.size = 4.0f;
         menu.BuildMenu();
 
-        market.pos = window.GetScrSize() * 0.5f;
+        market.pos = GetScrSize() * 0.5f;
         market.size = 5.0f;
         market.Deserialize(config);
 
@@ -64,7 +63,7 @@ public:
 
         gameOverMenu["Retry"].id = (int32_t)Gamestate::Main;
         gameOverMenu["Main Menu"].id = (int32_t)Gamestate::MainMenu;
-        gameOverMenu.position = window.GetScrSize() * 0.5f;
+        gameOverMenu.position = GetScrSize() * 0.5f;
         gameOverMenu.textOrigin = {0.5f, 0.0f};
         gameOverMenu.tableSize = {1, 2};
         gameOverMenu.size = 4.0f;
@@ -72,7 +71,7 @@ public:
 
         pauseMenu["Main Menu"].id = (int32_t)Gamestate::MainMenu;
         pauseMenu["Resume"].id = (int32_t)Gamestate::Main;
-        pauseMenu.position = window.GetScrSize() * 0.5f;
+        pauseMenu.position = GetScrSize() * 0.5f;
         pauseMenu.textOrigin = {0.5f, 0.0f};
         pauseMenu.tableSize = {1, 2};
         pauseMenu.size = 4.0f;
@@ -96,25 +95,23 @@ public:
 
         ps.Clear();
     }
-    inline void DrawAndUpdate(Window& window)
+    inline void UserUpdate() override
     {
-        window.Begin();
         switch(currGameState)
         {
-            case Gamestate::MainMenu: MenuDrawAndUpdate(window); break;
-            case Gamestate::Main: MainDrawAndUpdate(window); break;
-            case Gamestate::Market: MarketDrawAndUpdate(window); break;
-            case Gamestate::EndFail: EndFailDrawAndUpdate(window); break;
-            case Gamestate::Pause: PauseDrawAndUpdate(window); break;
+            case Gamestate::MainMenu: MenuDrawAndUpdate(); break;
+            case Gamestate::Main: MainDrawAndUpdate(); break;
+            case Gamestate::Market: MarketDrawAndUpdate(); break;
+            case Gamestate::EndFail: EndFailDrawAndUpdate(); break;
+            case Gamestate::Pause: PauseDrawAndUpdate(); break;
         }
         batch.Flush();
-        window.End();
     }
-    inline void MenuDrawAndUpdate(Window& window)
+    inline void MenuDrawAndUpdate()
     {
         if(menuManager.Empty()) menuManager.Open(menu);
 
-        Gamestate id = (Gamestate)menuManager.Update(window);
+        Gamestate id = (Gamestate)menuManager.Update(*this);
 
         switch(id)
         {
@@ -127,7 +124,7 @@ public:
             break;
             case Gamestate::Exit:
             {
-                glfwSetWindowShouldClose(window.handle, GL_TRUE);
+                glfwSetWindowShouldClose(handle, GL_TRUE);
             }
             break;
             case Gamestate::Market:
@@ -144,57 +141,57 @@ public:
             default: break;
         }
         
-        window.Clear({0, 0, 0, 255});
+        Clear({0, 0, 0, 255});
 
-        menuManager.Draw(window);
+        menuManager.Draw(*this);
         
-        batch.Draw(menuBackgroundSprite, window.GetViewport()); 
+        batch.Draw(menuBackgroundSprite, GetViewport()); 
     }
-    inline void MarketDrawAndUpdate(Window& window)
+    inline void MarketDrawAndUpdate()
     {
-        if(window.GetKey(GLFW_KEY_ESCAPE) == Key::Pressed) currGameState = Gamestate::MainMenu;
+        if(GetKey(GLFW_KEY_ESCAPE) == Key::Pressed) currGameState = Gamestate::MainMenu;
 
-        market.Update(character, window);
+        market.Update(character, *this);
 
-        window.Clear({0, 0, 0, 255});
+        Clear({0, 0, 0, 255});
 
-        window.pixelMode = PixelMode::Mask;
+        pixelMode = PixelMode::Mask;
 
-        market.Draw(character, window);
+        market.Draw(character, *this);
 
-        window.pixelMode = PixelMode::Normal;
+        pixelMode = PixelMode::Normal;
     }
-    inline void MainDrawAndUpdate(Window& window)
+    inline void MainDrawAndUpdate()
     {
-        if(window.GetKey(GLFW_KEY_ESCAPE) == Key::Pressed) currGameState = Gamestate::Pause;
+        if(GetKey(GLFW_KEY_ESCAPE) == Key::Pressed) currGameState = Gamestate::Pause;
 
         if(character.health <= 0) currGameState = Gamestate::EndFail;
         
-        character.Update(window);
+        character.Update(*this);
 
-        waveController.Update(window, character);
+        waveController.Update(*this, character);
         
-        chest.Update(character, window);
+        chest.Update(character, *this);
 
-        window.Clear({0, 0, 0, 0});
+        Clear({0, 0, 0, 0});
 
-        batch.Draw(mapSprite, window.GetViewport());
+        batch.Draw(mapSprite, GetViewport());
 
-        window.pixelMode = PixelMode::Mask;
+        pixelMode = PixelMode::Mask;
  
-        chest.Draw(character, window);
+        chest.Draw(character, *this);
 
-        character.Draw(window);
+        character.Draw(*this);
 
-        waveController.Draw(window);
+        waveController.Draw(*this);
 
-        window.pixelMode = PixelMode::Normal;
+        pixelMode = PixelMode::Normal;
     }
-    inline void PauseDrawAndUpdate(Window& window)
+    inline void PauseDrawAndUpdate()
     {
         if(menuManager.Empty()) menuManager.Open(pauseMenu);
 
-        Gamestate id = (Gamestate)menuManager.Update(window);
+        Gamestate id = (Gamestate)menuManager.Update(*this);
 
         switch(id)
         {
@@ -207,17 +204,17 @@ public:
             default: break;
         }
 
-        window.Clear({0, 0, 0, 255});
+        Clear({0, 0, 0, 255});
 
-        window.DrawText(window.GetWidth() * 0.5f, 100, "PAUSED", 4.0f, {255, 255, 255, 255}, 0.5f);
+        DrawText(GetWidth() * 0.5f, 100, "PAUSED", 4.0f, {255, 255, 255, 255}, 0.5f);
 
-        menuManager.Draw(window);
+        menuManager.Draw(*this);
     }
-    inline void EndFailDrawAndUpdate(Window& window)
+    inline void EndFailDrawAndUpdate()
     {
         if(menuManager.Empty()) menuManager.Open(gameOverMenu);
 
-        Gamestate id = (Gamestate)menuManager.Update(window);
+        Gamestate id = (Gamestate)menuManager.Update(*this);
 
         switch(id)
         {
@@ -237,13 +234,13 @@ public:
             default: break;
         }
 
-        window.Clear({0, 0, 0, 255});
+        Clear({0, 0, 0, 255});
 
-        window.DrawText(window.GetWidth() * 0.5, 100, "You lost", 6.0f, {255, 255, 255, 255}, 0.5f);
+        DrawText(GetWidth() * 0.5, 100, "You lost", 6.0f, {255, 255, 255, 255}, 0.5f);
 
-        menuManager.Draw(window);
+        menuManager.Draw(*this);
     }
-    inline void End()
+    inline void Terminate()
     {
         character.Serialize(config);
         market.Serialize(config);
@@ -253,10 +250,8 @@ public:
 
 int main()
 {
-    Window window = Window(1024, 768);
-    Game instance = Game(window);
-    while(!glfwWindowShouldClose(window.handle))
-        instance.DrawAndUpdate(window);
-    instance.End();
+    Game instance;
+    instance.Start(1024, 768);
+    instance.Terminate();
     return 0;
 }
