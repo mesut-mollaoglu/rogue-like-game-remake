@@ -79,6 +79,7 @@ public:
 
         waveController.Reset();
 
+        menuManager.window = this;
         menuManager.Close();
 
         Restart();
@@ -111,7 +112,7 @@ public:
     {
         if(menuManager.Empty()) menuManager.Open(menu);
 
-        Gamestate id = (Gamestate)menuManager.Update(*this);
+        Gamestate id = (Gamestate)menuManager.Update();
 
         switch(id)
         {
@@ -143,7 +144,7 @@ public:
         
         Clear({0, 0, 0, 255});
 
-        menuManager.Draw(*this);
+        menuManager.Draw();
         
         batch.Draw(menuBackgroundSprite, GetViewport()); 
     }
@@ -155,7 +156,7 @@ public:
 
         Clear({0, 0, 0, 255});
 
-        pixelMode = PixelMode::Mask;
+        pixelMode = PixelMode::Alpha;
 
         market.Draw(character, *this);
 
@@ -177,7 +178,7 @@ public:
 
         batch.Draw(mapSprite, GetViewport());
 
-        pixelMode = PixelMode::Mask;
+        pixelMode = PixelMode::Alpha;
  
         chest.Draw(character, *this);
 
@@ -191,7 +192,7 @@ public:
     {
         if(menuManager.Empty()) menuManager.Open(pauseMenu);
 
-        Gamestate id = (Gamestate)menuManager.Update(*this);
+        Gamestate id = (Gamestate)menuManager.Update();
 
         switch(id)
         {
@@ -208,13 +209,13 @@ public:
 
         DrawText(GetWidth() * 0.5f, 100, "PAUSED", 4.0f, {255, 255, 255, 255}, 0.5f);
 
-        menuManager.Draw(*this);
+        menuManager.Draw();
     }
     inline void EndFailDrawAndUpdate()
     {
         if(menuManager.Empty()) menuManager.Open(gameOverMenu);
 
-        Gamestate id = (Gamestate)menuManager.Update(*this);
+        Gamestate id = (Gamestate)menuManager.Update();
 
         switch(id)
         {
@@ -238,7 +239,7 @@ public:
 
         DrawText(GetWidth() * 0.5, 100, "You lost", 6.0f, {255, 255, 255, 255}, 0.5f);
 
-        menuManager.Draw(*this);
+        menuManager.Draw();
     }
     inline void Terminate()
     {
