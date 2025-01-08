@@ -3,7 +3,7 @@
 #define VERTEX_COLOR
 #include "game.h"
 
-enum class Gamestate
+enum class GameState
 {
     Main,
     MainMenu,
@@ -22,14 +22,14 @@ private:
     Chest chest;
     ParticleSystem ps;
     DataNode config;
-    MenuManager menuManager;
-    Gamestate currGameState = Gamestate::MainMenu;
+    MenuManager<GameState> menuManager;
+    GameState currGameState = GameState::MainMenu;
     Decal menuBackgroundSprite;
     SpriteBatch batch;
-    Menu menu;
+    Menu<GameState> menu;
     Market market;
-    Menu gameOverMenu;
-    Menu pauseMenu;
+    Menu<GameState> gameOverMenu;
+    Menu<GameState> pauseMenu;
 public:
     inline void UserStart() override
     {
@@ -45,10 +45,10 @@ public:
         mapSprite = Decal("assets\\misc\\map.png");
         menuBackgroundSprite = Decal("assets\\UI\\menu\\background.png");
 
-        menu["Start"].id = (int32_t)Gamestate::Main;
-        menu["Market"].id = (int32_t)Gamestate::Market;
-        menu["Exit"]["No"].id = (int32_t)Gamestate::MainMenu;
-        menu["Exit"]["Yes"].id = (int32_t)Gamestate::Exit;
+        menu["Start"].id = GameState::Main;
+        menu["Market"].id = GameState::Market;
+        menu["Exit"]["No"].id = GameState::MainMenu;
+        menu["Exit"]["Yes"].id = GameState::Exit;
         menu["Exit"].tableSize = {2, 1};
         menu.position = {30.0f, 250.0f};
         menu.tableSize = {1, 3};
@@ -61,16 +61,16 @@ public:
 
         ps.pause = false;
 
-        gameOverMenu["Retry"].id = (int32_t)Gamestate::Main;
-        gameOverMenu["Main Menu"].id = (int32_t)Gamestate::MainMenu;
+        gameOverMenu["Retry"].id = GameState::Main;
+        gameOverMenu["Main Menu"].id = GameState::MainMenu;
         gameOverMenu.position = GetScrSize() * 0.5f;
         gameOverMenu.textOrigin = {0.5f, 0.0f};
         gameOverMenu.tableSize = {1, 2};
         gameOverMenu.size = 4.0f;
         gameOverMenu.BuildMenu();
 
-        pauseMenu["Main Menu"].id = (int32_t)Gamestate::MainMenu;
-        pauseMenu["Resume"].id = (int32_t)Gamestate::Main;
+        pauseMenu["Main Menu"].id = GameState::MainMenu;
+        pauseMenu["Resume"].id = GameState::Main;
         pauseMenu.position = GetScrSize() * 0.5f;
         pauseMenu.textOrigin = {0.5f, 0.0f};
         pauseMenu.tableSize = {1, 2};
@@ -100,11 +100,11 @@ public:
     {
         switch(currGameState)
         {
-            case Gamestate::MainMenu: MenuDrawAndUpdate(); break;
-            case Gamestate::Main: MainDrawAndUpdate(); break;
-            case Gamestate::Market: MarketDrawAndUpdate(); break;
-            case Gamestate::EndFail: EndFailDrawAndUpdate(); break;
-            case Gamestate::Pause: PauseDrawAndUpdate(); break;
+            case GameState::MainMenu: MenuDrawAndUpdate(); break;
+            case GameState::Main: MainDrawAndUpdate(); break;
+            case GameState::Market: MarketDrawAndUpdate(); break;
+            case GameState::EndFail: EndFailDrawAndUpdate(); break;
+            case GameState::Pause: PauseDrawAndUpdate(); break;
         }
         batch.Flush();
     }
@@ -112,35 +112,36 @@ public:
     {
         if(menuManager.Empty()) menuManager.Open(menu);
 
-        Gamestate id = (Gamestate)menuManager.Update();
+        std::optional<GameState> state = menuManager.Update();
 
-        switch(id)
-        {
-            case Gamestate::Main:
+        if(state.has_value())
+            switch(state.value())
             {
-                Restart();
-                menuManager.Close();
-                currGameState = id;
+                case GameState::Main:
+                {
+                    Restart();
+                    menuManager.Close();
+                    currGameState = GameState::Main;
+                }
+                break;
+                case GameState::Exit:
+                {
+                    glfwSetWindowShouldClose(handle, GL_TRUE);
+                }
+                break;
+                case GameState::Market:
+                {
+                    menuManager.Close();
+                    currGameState = GameState::Market;
+                }
+                break;
+                case GameState::MainMenu:
+                {
+                    menuManager.MoveBack();
+                }
+                break;
+                default: break;
             }
-            break;
-            case Gamestate::Exit:
-            {
-                glfwSetWindowShouldClose(handle, GL_TRUE);
-            }
-            break;
-            case Gamestate::Market:
-            {
-                menuManager.Close();
-                currGameState = id;
-            }
-            break;
-            case Gamestate::MainMenu:
-            {
-                menuManager.MoveBack();
-            }
-            break;
-            default: break;
-        }
         
         Clear({0, 0, 0, 255});
 
@@ -150,7 +151,7 @@ public:
     }
     inline void MarketDrawAndUpdate()
     {
-        if(GetKey(GLFW_KEY_ESCAPE) == Key::Pressed) currGameState = Gamestate::MainMenu;
+        if(GetKey(GLFW_KEY_ESCAPE) == Key::Pressed) currGameState = GameState::MainMenu;
 
         market.Update(character, *this);
 
@@ -164,9 +165,9 @@ public:
     }
     inline void MainDrawAndUpdate()
     {
-        if(GetKey(GLFW_KEY_ESCAPE) == Key::Pressed) currGameState = Gamestate::Pause;
+        if(GetKey(GLFW_KEY_ESCAPE) == Key::Pressed) currGameState = GameState::Pause;
 
-        if(character.health <= 0) currGameState = Gamestate::EndFail;
+        if(character.health <= 0) currGameState = GameState::EndFail;
         
         character.Update(*this);
 
@@ -192,18 +193,19 @@ public:
     {
         if(menuManager.Empty()) menuManager.Open(pauseMenu);
 
-        Gamestate id = (Gamestate)menuManager.Update();
+        std::optional<GameState> state = menuManager.Update();
 
-        switch(id)
-        {
-            case Gamestate::Main: case Gamestate::MainMenu:
+        if(state.has_value())
+            switch(state.value())
             {
-                menuManager.Close();
-                currGameState = id;
+                case GameState::Main: case GameState::MainMenu:
+                {
+                    menuManager.Close();
+                    currGameState = state.value();
+                }
+                break;
+                default: break;
             }
-            break;
-            default: break;
-        }
 
         Clear({0, 0, 0, 255});
 
@@ -215,25 +217,26 @@ public:
     {
         if(menuManager.Empty()) menuManager.Open(gameOverMenu);
 
-        Gamestate id = (Gamestate)menuManager.Update();
+        std::optional<GameState> state = menuManager.Update();
 
-        switch(id)
-        {
-            case Gamestate::Main:
+        if(state.has_value())
+            switch(state.value())
             {
-                Restart();
-                menuManager.Close();
-                currGameState = id;
+                case GameState::Main:
+                {
+                    Restart();
+                    menuManager.Close();
+                    currGameState = GameState::Main;
+                }
+                break;
+                case GameState::MainMenu:
+                {
+                    menuManager.Close();
+                    currGameState = GameState::MainMenu;
+                }
+                break;
+                default: break;
             }
-            break;
-            case Gamestate::MainMenu:
-            {
-                menuManager.Close();
-                currGameState = id;
-            }
-            break;
-            default: break;
-        }
 
         Clear({0, 0, 0, 255});
 
