@@ -55,7 +55,7 @@ public:
         menu.size = 4.0f;
         menu.BuildMenu();
 
-        market.pos = GetScrSize() * 0.5f;
+        market.pos = GetScreenSize() * 0.5f;
         market.size = 5.0f;
         market.Deserialize(config);
 
@@ -63,7 +63,7 @@ public:
 
         gameOverMenu["Retry"].id = GameState::Main;
         gameOverMenu["Main Menu"].id = GameState::MainMenu;
-        gameOverMenu.position = GetScrSize() * 0.5f;
+        gameOverMenu.position = GetScreenSize() * 0.5f;
         gameOverMenu.textOrigin = {0.5f, 0.0f};
         gameOverMenu.tableSize = {1, 2};
         gameOverMenu.size = 4.0f;
@@ -71,7 +71,7 @@ public:
 
         pauseMenu["Main Menu"].id = GameState::MainMenu;
         pauseMenu["Resume"].id = GameState::Main;
-        pauseMenu.position = GetScrSize() * 0.5f;
+        pauseMenu.position = GetScreenSize() * 0.5f;
         pauseMenu.textOrigin = {0.5f, 0.0f};
         pauseMenu.tableSize = {1, 2};
         pauseMenu.size = 4.0f;
@@ -126,7 +126,7 @@ public:
                 break;
                 case GameState::Exit:
                 {
-                    glfwSetWindowShouldClose(handle, GL_TRUE);
+                    glfwSetWindowShouldClose(GetHandle(), GL_TRUE);
                 }
                 break;
                 case GameState::Market:
@@ -157,11 +157,11 @@ public:
 
         Clear({0, 0, 0, 255});
 
-        pixelMode = PixelMode::Alpha;
+        SetPixelMode(PixelMode::Alpha);
 
         market.Draw(character, *this);
 
-        pixelMode = PixelMode::Normal;
+        SetPixelMode(PixelMode::Normal);
     }
     inline void MainDrawAndUpdate()
     {
@@ -179,7 +179,7 @@ public:
 
         batch.Draw(mapSprite, GetViewport());
 
-        pixelMode = PixelMode::Alpha;
+        SetPixelMode(PixelMode::Alpha);
  
         chest.Draw(character, *this);
 
@@ -187,7 +187,7 @@ public:
 
         waveController.Draw(*this);
 
-        pixelMode = PixelMode::Normal;
+        SetPixelMode(PixelMode::Normal);
     }
     inline void PauseDrawAndUpdate()
     {
