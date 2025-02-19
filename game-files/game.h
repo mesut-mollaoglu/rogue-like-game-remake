@@ -8,7 +8,7 @@ const Rect<float> mapBound =
     {90.0f, 160.0f}, {830.0f, 490.0f}
 };
 
-inline float Distance(vec2f v1, vec2f v2)
+inline float Distance(vec2 v1, vec2 v2)
 {
     return (v1 - v2).mag();
 }
@@ -30,7 +30,7 @@ enum class CharacterState
     Dash
 };
 
-inline bool InBounds(vec2f pos, Rect<float> rc)
+inline bool InBounds(vec2 pos, Rect<float> rc)
 {
     return rc.Contains(pos);
 }
@@ -41,7 +41,7 @@ struct Character
     float velocity = 150.0f;
     int health, maxHealth;
     int coins, coinMultiplier;
-    vec2f pos;
+    vec2 pos;
     Horizontal direction;
     StateMachine<Sprite, CharacterState> stateMachine;
     EntityDef<Sprite, CharacterState>* def;
@@ -73,10 +73,10 @@ struct Character
         def->operator[](CharacterState::Attack).AddFrame("assets\\character\\attack\\frame-3.png");
         def->operator[](CharacterState::Attack).AddFrame("assets\\character\\attack\\frame-4.png");
         
-        stateMachine.DefineState(CharacterState::Walking, AnimUpdate::Loop, 0.2f);
-        stateMachine.DefineState(CharacterState::Idle, AnimUpdate::Loop, 0.2f);
-        stateMachine.DefineState(CharacterState::Attack, AnimUpdate::Once, 0.1f);
-        stateMachine.DefineState(CharacterState::Dash, AnimUpdate::Once, 0.04f);
+        stateMachine.DefineState(CharacterState::Walking, UpdateRoutine::Loop, 0.2f);
+        stateMachine.DefineState(CharacterState::Idle, UpdateRoutine::Loop, 0.2f);
+        stateMachine.DefineState(CharacterState::Attack, UpdateRoutine::PlayOnce, 0.1f);
+        stateMachine.DefineState(CharacterState::Dash, UpdateRoutine::PlayOnce, 0.04f);
         stateMachine.def = def;
 
         stateMachine.currStateName = CharacterState::Idle;
@@ -108,7 +108,7 @@ struct Character
     inline void Dash(Window& window)
     {
         if(stateMachine.currStateName != CharacterState::Dash) return;
-        float dx = 600.0f * window.timer.deltaTime * (direction == Horizontal::Flip ? -1 : 1);
+        float dx = 600.0f * window.GetDeltaTime() * (direction == Horizontal::Flip ? -1 : 1);
         if((pos.x + dx) > mapBound.pos.x && (pos.x + dx) < mapBound.pos.x + mapBound.size.x) pos.x += dx;
     }
     inline void Update(Window& window)
@@ -252,32 +252,32 @@ struct EnemyBase
     StateMachine<Sprite, EnemyState> stateMachine;
     Horizontal direction = Horizontal::Norm;
     float health = 100.0f;
-    vec2f pos = 0.0f;
+    vec2 pos = 0.0f;
     EnemyType type;
-    virtual void Update(Character& character, float deltaTime) = 0;
+    virtual void Update(Character& character, float delta) = 0;
     virtual void Draw(Window& window) = 0;
-    virtual void GiveDamage(Character& character, float deltaTime) = 0;
-    virtual void SetSpawnData(const vec2f& pos) = 0;
+    virtual void GiveDamage(Character& character, float delta) = 0;
+    virtual void SetSpawnData(const vec2& pos) = 0;
     inline void DrawSelf(Window& window)
     {
         stateMachine.Draw(window, pos, defMap.at(type)->size, 0.0f, direction);
         DrawHealth(pos.x, pos.y - defMap.at(type)->healthBarOffset, window, 50.0f, 10.0f, health);
     }
-    inline void UpdateSelf(Character& character, float deltaTime)
+    inline void UpdateSelf(Character& character, float delta)
     {
         if(health <= 0.0f) stateMachine.SetState(EnemyState::Dead);
-        else TakeDamage(character, deltaTime);
-        stateMachine.Update(deltaTime);
+        else TakeDamage(character, delta);
+        stateMachine.Update(delta);
     }
     inline float GetDistance(Character& character)
     {
         return Distance(character.pos, pos);
     }
-    inline void TakeDamage(Character& character, float deltaTime)
+    inline void TakeDamage(Character& character, float delta)
     {
         if(GetDistance(character) < 100.0f)
         {
-            if(character.stateMachine.currStateName == CharacterState::Attack) health -= 10.0f * deltaTime;
+            if(character.stateMachine.currStateName == CharacterState::Attack) health -= 10.0f * delta;
             else if(character.stateMachine.currStateName == CharacterState::Dash) health = 0.0f;
         }
     }
@@ -288,35 +288,35 @@ struct Ghost : EnemyBase
     Ghost()
     {
         type = EnemyType::Ghost;
-        stateMachine.DefineState(EnemyState::Idle, AnimUpdate::Loop, 0.2f);
-        stateMachine.DefineState(EnemyState::Attack, AnimUpdate::Once, 0.2f);
-        stateMachine.DefineState(EnemyState::Move, AnimUpdate::Loop, 0.2f);
-        stateMachine.DefineState(EnemyState::Dead, AnimUpdate::Once, 0.2f);
+        stateMachine.DefineState(EnemyState::Idle, UpdateRoutine::Loop, 0.2f);
+        stateMachine.DefineState(EnemyState::Attack, UpdateRoutine::PlayOnce, 0.2f);
+        stateMachine.DefineState(EnemyState::Move, UpdateRoutine::Loop, 0.2f);
+        stateMachine.DefineState(EnemyState::Dead, UpdateRoutine::PlayOnce, 0.2f);
         stateMachine.def = &defMap.at(type)->enemyDef;
         stateMachine.currStateName = EnemyState::Idle;
     }
-    inline void Update(Character& character, float deltaTime) override
+    inline void Update(Character& character, float delta) override
     {
         float dist = GetDistance(character);
         if(dist <= 100.0f) stateMachine.SetState(EnemyState::Attack);
         else stateMachine.SetState((!InBounds(pos, mapBound) || dist < 1000.0f) ? EnemyState::Move : EnemyState::Idle);
-        if(stateMachine.currStateName == EnemyState::Move) Movement(character, deltaTime);
-        UpdateSelf(character, deltaTime);
-        GiveDamage(character, deltaTime);
+        if(stateMachine.currStateName == EnemyState::Move) Movement(character, delta);
+        UpdateSelf(character, delta);
+        GiveDamage(character, delta);
     }
-    inline void Movement(Character& character, float deltaTime, float speed = 150.0f)
+    inline void Movement(Character& character, float delta, float speed = 150.0f)
     {
         direction = (character.pos.x < pos.x) ? Horizontal::Flip : Horizontal::Norm;
         float angle = std::atan2(character.pos.y - pos.y, character.pos.x - pos.x);
-        pos.x += std::cos(angle) * speed * deltaTime;
-        pos.y += std::sin(angle) * speed * deltaTime;
+        pos.x += std::cos(angle) * speed * delta;
+        pos.y += std::sin(angle) * speed * delta;
     }
-    inline void GiveDamage(Character& character, float deltaTime) override
+    inline void GiveDamage(Character& character, float delta) override
     {
         if(health <= 0.0f && character.currPowerup == PowerupType::Shield) return;
-        if(GetDistance(character) < 100.0f &&  stateMachine.currStateName == EnemyState::Attack) character.health -= deltaTime;
+        if(GetDistance(character) < 100.0f &&  stateMachine.currStateName == EnemyState::Attack) character.health -= delta;
     }
-    inline void SetSpawnData(const vec2f& pos) override
+    inline void SetSpawnData(const vec2& pos) override
     {
         this->pos = pos;
     }
@@ -328,16 +328,16 @@ struct Ghost : EnemyBase
 
 struct EnergyBall
 {
-    vec2f pos;
+    vec2 pos;
     float distanceCovered = 0.0f;
     bool remove = false;
-    inline void Update(Character& character, float deltaTime, float speed = 150.0f)
+    inline void Update(Character& character, float delta, float speed = 150.0f)
     {
         remove = distanceCovered > 300.0f;
         float angle = std::atan2(character.pos.y - pos.y, character.pos.x - pos.x);
-        pos.x += std::cos(angle) * speed * deltaTime;
-        pos.y += std::sin(angle) * speed * deltaTime;
-        distanceCovered += speed * deltaTime;
+        pos.x += std::cos(angle) * speed * delta;
+        pos.y += std::sin(angle) * speed * delta;
+        distanceCovered += speed * delta;
     }
 };
 
@@ -347,22 +347,22 @@ struct Ranged : EnemyBase
     {
         type = EnemyType::Ranged;
         timeSinceAttack = 0.0f;
-        stateMachine.DefineState(EnemyState::Idle, AnimUpdate::Loop, 0.2f);
-        stateMachine.DefineState(EnemyState::Spawn, AnimUpdate::Once, 0.2f);
-        stateMachine.DefineState(EnemyState::Attack, AnimUpdate::Once, 0.2f);
-        stateMachine.DefineState(EnemyState::Dead, AnimUpdate::Once, 0.2f);
+        stateMachine.DefineState(EnemyState::Idle, UpdateRoutine::Loop, 0.2f);
+        stateMachine.DefineState(EnemyState::Spawn, UpdateRoutine::PlayOnce, 0.2f);
+        stateMachine.DefineState(EnemyState::Attack, UpdateRoutine::PlayOnce, 0.2f);
+        stateMachine.DefineState(EnemyState::Dead, UpdateRoutine::PlayOnce, 0.2f);
         stateMachine.def = &defMap.at(type)->enemyDef;
         stateMachine.currStateName = EnemyState::Spawn;
         ball.remove = true;
     }
-    inline void Update(Character& character, float deltaTime) override
+    inline void Update(Character& character, float delta) override
     {
-        timeSinceAttack += deltaTime;
+        timeSinceAttack += delta;
         stateMachine.SetState(timeSinceAttack < 5.0f ? EnemyState::Idle : EnemyState::Attack);
         if(stateMachine.currStateName == EnemyState::Attack) Attack();
-        UpdateSelf(character, deltaTime);
-        UpdateEnergyBall(character, deltaTime);
-        GiveDamage(character, deltaTime);
+        UpdateSelf(character, delta);
+        UpdateEnergyBall(character, delta);
+        GiveDamage(character, delta);
     }
     inline void Attack()
     {
@@ -377,13 +377,13 @@ struct Ranged : EnemyBase
         DrawSelf(window);
         DrawEnergyBall(window);
     }
-    inline void GiveDamage(Character& character, float deltaTime) override
+    inline void GiveDamage(Character& character, float delta) override
     {
         if(health <= 0.0f || character.currPowerup == PowerupType::Shield || ball.remove || Distance(ball.pos, character.pos) > 50.0f) return;
-        character.health -= deltaTime * 10.0f;
+        character.health -= delta * 10.0f;
         ball.remove = true;
     }
-    inline void SetSpawnData(const vec2f& pos) override
+    inline void SetSpawnData(const vec2& pos) override
     {
         this->pos = ball.pos = pos;
     }
@@ -392,10 +392,10 @@ struct Ranged : EnemyBase
         if(!ball.remove) 
             window.DrawSprite(ball.pos.x, ball.pos.y, defMap.at(type)->sprEnergyBall, 5.0f);
     }
-    inline void UpdateEnergyBall(Character& character, float deltaTime)
+    inline void UpdateEnergyBall(Character& character, float delta)
     {
         if(!ball.remove) 
-            ball.Update(character, deltaTime);
+            ball.Update(character, delta);
     }
 private:
     EnergyBall ball;
@@ -406,12 +406,12 @@ struct EnemyWrapper
 {
     EnemyBase* enemy;
     bool remove = false;
-    void Update(Character& character, float deltaTime)
+    void Update(Character& character, float delta)
     {
-        if(enemy->stateMachine.currStateName == EnemyState::Dead) remove = enemy->stateMachine[EnemyState::Dead].played;
+        if(enemy->stateMachine.currStateName == EnemyState::Dead) remove = enemy->stateMachine[EnemyState::Dead].playedOnce;
         int coinInc = remove ? (character.currPowerup == PowerupType::Money ? 3 : 1) : 0;
         character.coins += character.coinMultiplier * coinInc;
-        enemy->Update(character, deltaTime);
+        enemy->Update(character, delta);
     }
     void Draw(Window& window)
     {
@@ -432,8 +432,8 @@ inline void SpawnEnemy(std::vector<EnemyWrapper>& enemies, EnemyType enemyType, 
         case EnemyType::Ghost: enemies.push_back({new Ghost()}); break;
         case EnemyType::Ranged: enemies.push_back({new Ranged()}); break;
     }
-    const vec2f scrSize = window.GetScrSize();
-    vec2f pos = RndPointInRect(mapBound);
+    const vec2 scrSize = window.GetScreenSize();
+    vec2 pos = RndPointInRect(mapBound);
     switch(spawnMap.at(enemyType))
     {
         case eSpawnType::Inside: break;
@@ -474,7 +474,7 @@ struct WaveSystem
     }
     inline void Update(Window& window, Character& character)
     {
-        timeSinceSpawn += window.timer.deltaTime;
+        timeSinceSpawn += window.GetDeltaTime();
 
         switch(spawnSystem)
         {
@@ -509,7 +509,7 @@ struct WaveSystem
             break;
         }
 
-        for(auto& enemy : enemies) enemy.Update(character, window.timer.deltaTime);
+        for(auto& enemy : enemies) enemy.Update(character, window.GetDeltaTime());
 
         enemies.erase(std::remove_if(enemies.begin(), enemies.end(), [](EnemyWrapper& wrapper){return wrapper.remove;}), enemies.end());
     }
@@ -525,7 +525,7 @@ struct WaveSystem
 struct Chest
 {
     std::unordered_map<PowerupType, Sprite> powerups;
-    vec2f pos = vec2f(900.0f, 170.0f);
+    vec2 pos = vec2(900.0f, 170.0f);
     Animator<Sprite> animator;
     float elapsedTime;
     enum class cUpdate
@@ -543,7 +543,7 @@ struct Chest
         powerups[PowerupType::Speed] = Sprite("assets\\chest\\powerups\\fast-run.png");
         powerups[PowerupType::Shield] = Sprite("assets\\chest\\powerups\\shield.png");
         powerups[PowerupType::Money] = Sprite("assets\\chest\\powerups\\money-icon.png");
-        animator.data.update = AnimUpdate::Once;
+        animator.data.update = UpdateRoutine::PlayOnce;
         animator.data.duration = 0.2f;
         animator.data.Reverse();
         elapsedTime = 5.0f;
@@ -551,8 +551,8 @@ struct Chest
     inline void Reset()
     {
         elapsedTime = 5.0f;
-        animator.data.index = 0;
-        animator.data.totalTime = 0.0f;
+        animator.data.currFrameIndex = 0ull;
+        animator.data.elapsedTime = 0.0f;
         animator.data.reverse = true;
         cUpdateType = cUpdate::Closed;
     }
@@ -573,13 +573,13 @@ struct Chest
     }
     inline void Update(Character& character, Window& window)
     {
-        const float dt = window.timer.deltaTime;
+        const float dt = window.GetDeltaTime();
         switch(cUpdateType)
         {
             case cUpdate::Opening: 
             {
                 animator.Update(dt);
-                if(animator.data.played)
+                if(animator.data.playedOnce)
                 {
                     character.currPowerup = (PowerupType)rand(0, 4);
                     cUpdateType = cUpdate::Open;
@@ -631,7 +631,7 @@ struct Market
     std::unordered_map<std::string, Item> items;
     std::vector<std::string> itemIndices;
     int currItemIndex = 0;
-    vec2f pos;
+    vec2 pos;
     float size = 1.0f;
     inline void Deserialize(DataNode& datanode)
     {
