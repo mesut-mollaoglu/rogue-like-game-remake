@@ -3,12 +3,9 @@
 
 #include "../custom-game-engine/headers/includes.h"
 
-const Rect<float> mapBound = 
-{
-    {90.0f, 160.0f}, {830.0f, 490.0f}
-};
+constexpr Rect<float> mapBound = {{90.0f, 160.0f}, {830.0f, 490.0f}};
 
-inline float Distance(vec2 v1, vec2 v2)
+inline float Distance(const vec2& v1, const vec2& v2)
 {
     return (v1 - v2).mag();
 }
@@ -30,7 +27,7 @@ enum class CharacterState
     Dash
 };
 
-inline bool InBounds(vec2 pos, Rect<float> rc)
+inline bool InBounds(const vec2& pos, const Rect<float>& rc)
 {
     return rc.Contains(pos);
 }
@@ -38,54 +35,52 @@ inline bool InBounds(vec2 pos, Rect<float> rc)
 struct Character
 {
     PowerupType currPowerup = PowerupType::None;
-    float velocity = 150.0f;
+    float speed = 150.0f;
     int health, maxHealth;
     int coins, coinMultiplier;
     vec2 pos;
-    Horizontal direction;
+    bool facesRight = true;
     StateMachine<Sprite, CharacterState> stateMachine;
     EntityDef<Sprite, CharacterState>* def;
     Character()
     {
-        direction = Horizontal::Norm;
-        
         def = new EntityDef<Sprite, CharacterState>();
-
-        def->operator[](CharacterState::Walking).AddFrame("assets\\character\\move\\frame-1.png");
-        def->operator[](CharacterState::Walking).AddFrame("assets\\character\\move\\frame-2.png");
-        def->operator[](CharacterState::Walking).AddFrame("assets\\character\\move\\frame-3.png");
-        def->operator[](CharacterState::Walking).AddFrame("assets\\character\\move\\frame-4.png");
-        def->operator[](CharacterState::Idle).AddFrame("assets\\character\\idle\\frame-1.png");
-        def->operator[](CharacterState::Idle).AddFrame("assets\\character\\idle\\frame-2.png");
-        def->operator[](CharacterState::Idle).AddFrame("assets\\character\\idle\\frame-3.png");
-        def->operator[](CharacterState::Idle).AddFrame("assets\\character\\idle\\frame-4.png");
-        def->operator[](CharacterState::Dash).AddFrame("assets\\character\\dash\\frame-1.png");
-        def->operator[](CharacterState::Dash).AddFrame("assets\\character\\dash\\frame-2.png");
-        def->operator[](CharacterState::Dash).AddFrame("assets\\character\\dash\\frame-3.png");
-        def->operator[](CharacterState::Dash).AddFrame("assets\\character\\dash\\frame-4.png");
-        def->operator[](CharacterState::Dash).AddFrame("assets\\character\\dash\\frame-5.png");
-        def->operator[](CharacterState::Dash).AddFrame("assets\\character\\dash\\frame-6.png");
-        def->operator[](CharacterState::Dash).AddFrame("assets\\character\\dash\\frame-7.png");
-        def->operator[](CharacterState::Dash).AddFrame("assets\\character\\dash\\frame-8.png");
-        def->operator[](CharacterState::Dash).AddFrame("assets\\character\\dash\\frame-9.png");
-        def->operator[](CharacterState::Attack).AddFrame("assets\\character\\attack\\frame-1.png");
-        def->operator[](CharacterState::Attack).AddFrame("assets\\character\\attack\\frame-2.png");
-        def->operator[](CharacterState::Attack).AddFrame("assets\\character\\attack\\frame-3.png");
-        def->operator[](CharacterState::Attack).AddFrame("assets\\character\\attack\\frame-4.png");
         
-        stateMachine.DefineState(CharacterState::Walking, UpdateRoutine::Loop, 0.2f);
-        stateMachine.DefineState(CharacterState::Idle, UpdateRoutine::Loop, 0.2f);
-        stateMachine.DefineState(CharacterState::Attack, UpdateRoutine::PlayOnce, 0.1f);
-        stateMachine.DefineState(CharacterState::Dash, UpdateRoutine::PlayOnce, 0.04f);
-        stateMachine.def = def;
+        (*def)[CharacterState::Walking].AddFrame("assets\\character\\move\\frame-1.png");
+        (*def)[CharacterState::Walking].AddFrame("assets\\character\\move\\frame-2.png");
+        (*def)[CharacterState::Walking].AddFrame("assets\\character\\move\\frame-3.png");
+        (*def)[CharacterState::Walking].AddFrame("assets\\character\\move\\frame-4.png");
+        (*def)[CharacterState::Idle].AddFrame("assets\\character\\idle\\frame-1.png");
+        (*def)[CharacterState::Idle].AddFrame("assets\\character\\idle\\frame-2.png");
+        (*def)[CharacterState::Idle].AddFrame("assets\\character\\idle\\frame-3.png");
+        (*def)[CharacterState::Idle].AddFrame("assets\\character\\idle\\frame-4.png");
+        (*def)[CharacterState::Dash].AddFrame("assets\\character\\dash\\frame-1.png");
+        (*def)[CharacterState::Dash].AddFrame("assets\\character\\dash\\frame-2.png");
+        (*def)[CharacterState::Dash].AddFrame("assets\\character\\dash\\frame-3.png");
+        (*def)[CharacterState::Dash].AddFrame("assets\\character\\dash\\frame-4.png");
+        (*def)[CharacterState::Dash].AddFrame("assets\\character\\dash\\frame-5.png");
+        (*def)[CharacterState::Dash].AddFrame("assets\\character\\dash\\frame-6.png");
+        (*def)[CharacterState::Dash].AddFrame("assets\\character\\dash\\frame-7.png");
+        (*def)[CharacterState::Dash].AddFrame("assets\\character\\dash\\frame-8.png");
+        (*def)[CharacterState::Dash].AddFrame("assets\\character\\dash\\frame-9.png");
+        (*def)[CharacterState::Attack].AddFrame("assets\\character\\attack\\frame-1.png");
+        (*def)[CharacterState::Attack].AddFrame("assets\\character\\attack\\frame-2.png");
+        (*def)[CharacterState::Attack].AddFrame("assets\\character\\attack\\frame-3.png");
+        (*def)[CharacterState::Attack].AddFrame("assets\\character\\attack\\frame-4.png");
+        
+        stateMachine.SetDefinition(def);
+        stateMachine.DefineState(CharacterState::Walking, 0.2f, Style::Repeat);
+        stateMachine.DefineState(CharacterState::Idle, 0.2f, Style::Repeat);
+        stateMachine.DefineState(CharacterState::Attack, 0.1f, Style::PlayOnce);
+        stateMachine.DefineState(CharacterState::Dash, 0.04f, Style::PlayOnce);
 
-        stateMachine.currStateName = CharacterState::Idle;
+        stateMachine.SetState(CharacterState::Idle);
 
         coins = 0;
     }
     inline void Movement(Window& window, float speed)
     {
-        if(stateMachine.currStateName != CharacterState::Walking) return;
+        if(!stateMachine.IsCurrentState(CharacterState::Walking)) return;
         const float dt = window.GetDeltaTime();
         if(currPowerup == PowerupType::Speed) speed *= 2.0f;
         if(window.GetKey(GLFW_KEY_W) == Key::Held) pos.y -= speed * dt;
@@ -93,12 +88,12 @@ struct Character
         if(window.GetKey(GLFW_KEY_A) == Key::Held) 
         {
             pos.x -= speed * dt;
-            if(direction == Horizontal::Norm) direction = Horizontal::Flip;
+            if(facesRight) facesRight = !facesRight;
         }
         if(window.GetKey(GLFW_KEY_D) == Key::Held) 
         {
             pos.x += speed * dt;
-            if(direction == Horizontal::Flip) direction = Horizontal::Norm;
+            if(!facesRight) facesRight = !facesRight;
         }
         if(pos.x < mapBound.pos.x) pos.x += speed * dt;
         if(pos.x > mapBound.pos.x + mapBound.size.x) pos.x -= speed * dt;
@@ -107,26 +102,32 @@ struct Character
     }
     inline void Dash(Window& window)
     {
-        if(stateMachine.currStateName != CharacterState::Dash) return;
-        float dx = 600.0f * window.GetDeltaTime() * (direction == Horizontal::Flip ? -1 : 1);
+        if(!stateMachine.IsCurrentState(CharacterState::Dash)) return;
+        float dx = 600.0f * window.GetDeltaTime() * (!facesRight ? -1 : 1);
         if((pos.x + dx) > mapBound.pos.x && (pos.x + dx) < mapBound.pos.x + mapBound.size.x) pos.x += dx;
+    }
+    inline void UpdateStates(Window& window)
+    {
+        if((stateMachine.IsCurrentState(CharacterState::Dash) || stateMachine.IsCurrentState(CharacterState::Attack))
+            && !stateMachine.HasFinishedPlaying()) return;
+        if(window.GetKey(GLFW_KEY_LEFT_SHIFT) == Key::Pressed) stateMachine.SetState(CharacterState::Dash);
+        else if(window.GetMouseButton(GLFW_MOUSE_BUTTON_1) == Key::Pressed) stateMachine.SetState(CharacterState::Attack);
+        else stateMachine.SetState((window.GetKey(GLFW_KEY_A) == Key::Held || window.GetKey(GLFW_KEY_W) == Key::Held || 
+        window.GetKey(GLFW_KEY_S) == Key::Held || window.GetKey(GLFW_KEY_D) == Key::Held) ? CharacterState::Walking : CharacterState::Idle);
     }
     inline void Update(Window& window)
     {
         if(currPowerup == PowerupType::Health) health = maxHealth;
-        if(window.GetKey(GLFW_KEY_LEFT_SHIFT) == Key::Pressed) stateMachine.SetState(CharacterState::Dash);
-        if(window.GetMouseButton(GLFW_MOUSE_BUTTON_1) == Key::Pressed) stateMachine.SetState(CharacterState::Attack);
-        stateMachine.SetState((window.GetKey(GLFW_KEY_A) == Key::Held || window.GetKey(GLFW_KEY_W) == Key::Held || 
-        window.GetKey(GLFW_KEY_S) == Key::Held || window.GetKey(GLFW_KEY_D) == Key::Held) ? CharacterState::Walking : CharacterState::Idle);
-        Movement(window, velocity);
+        UpdateStates(window);
+        Movement(window, speed);
         Dash(window);
         stateMachine.Update(window.GetDeltaTime());
     }
     inline void Draw(Window& window)
     {
-        stateMachine.Draw(window, pos, 3.5f, 0.0f, direction);
-        window.DrawText(32, 35, "HEALTH:" + std::to_string(health), 2.0f, {255, 255, 255, 255});
-        window.DrawText(32, 63, "COINS:" + std::to_string(coins), 2.0f, {255, 255, 255, 255});
+        stateMachine.Draw(window, pos, 3.5f, 0.0f, facesRight ? 0 : Horizontal);
+        window.DrawText(32, 35, "HEALTH:" + std::to_string(health), 2.0f, Colors::White);
+        window.DrawText(32, 63, "COINS:" + std::to_string(coins), 2.0f, Colors::White);
     }
     inline void Serialize(std::reference_wrapper<DataNode> datanode)
     {
@@ -140,8 +141,8 @@ struct Character
     {
         pos = 200.0f;
         health = maxHealth;
-        stateMachine.currStateName = CharacterState::Idle;
-        direction = Horizontal::Norm;
+        stateMachine.SetState(CharacterState::Idle);
+        facesRight = true;
         currPowerup = PowerupType::None;
     }
     ~Character() {}
@@ -167,6 +168,16 @@ struct GhostDef : EnemyDef
 {
     GhostDef()
     {
+        enemyDef[EnemyState::Spawn].AddFrame("assets\\enemy\\dead\\frame-10.png");
+        enemyDef[EnemyState::Spawn].AddFrame("assets\\enemy\\dead\\frame-9.png");
+        enemyDef[EnemyState::Spawn].AddFrame("assets\\enemy\\dead\\frame-8.png");
+        enemyDef[EnemyState::Spawn].AddFrame("assets\\enemy\\dead\\frame-7.png");
+        enemyDef[EnemyState::Spawn].AddFrame("assets\\enemy\\dead\\frame-6.png");
+        enemyDef[EnemyState::Spawn].AddFrame("assets\\enemy\\dead\\frame-5.png");
+        enemyDef[EnemyState::Spawn].AddFrame("assets\\enemy\\dead\\frame-4.png");
+        enemyDef[EnemyState::Spawn].AddFrame("assets\\enemy\\dead\\frame-3.png");
+        enemyDef[EnemyState::Spawn].AddFrame("assets\\enemy\\dead\\frame-2.png");
+        enemyDef[EnemyState::Spawn].AddFrame("assets\\enemy\\dead\\frame-1.png");
         enemyDef[EnemyState::Attack].AddFrame("assets\\enemy\\attack\\frame-1.png");
         enemyDef[EnemyState::Attack].AddFrame("assets\\enemy\\attack\\frame-2.png");
         enemyDef[EnemyState::Attack].AddFrame("assets\\enemy\\attack\\frame-3.png");
@@ -228,12 +239,6 @@ enum class EnemyType : uint8_t
     Ranged
 };
 
-enum class eSpawnType : uint8_t
-{
-    Inside,
-    Outside
-};
-
 inline void DrawHealth(float x, float y, Window& window, float width, float height, float health, float min = 0.0f, float max = 100.0f)
 {
     float finalWidth = width * health / (max - min);
@@ -250,7 +255,7 @@ std::unordered_map<EnemyType, EnemyDef*> defMap
 struct EnemyBase
 {
     StateMachine<Sprite, EnemyState> stateMachine;
-    Horizontal direction = Horizontal::Norm;
+    bool facesRight = true;
     float health = 100.0f;
     vec2 pos = 0.0f;
     EnemyType type;
@@ -260,7 +265,7 @@ struct EnemyBase
     virtual void SetSpawnData(const vec2& pos) = 0;
     inline void DrawSelf(Window& window)
     {
-        stateMachine.Draw(window, pos, defMap.at(type)->size, 0.0f, direction);
+        stateMachine.Draw(window, pos, defMap.at(type)->size, 0.0f, facesRight ? 0 : Flip::Horizontal);
         DrawHealth(pos.x, pos.y - defMap.at(type)->healthBarOffset, window, 50.0f, 10.0f, health);
     }
     inline void UpdateSelf(Character& character, float delta)
@@ -277,8 +282,8 @@ struct EnemyBase
     {
         if(GetDistance(character) < 100.0f)
         {
-            if(character.stateMachine.currStateName == CharacterState::Attack) health -= 10.0f * delta;
-            else if(character.stateMachine.currStateName == CharacterState::Dash) health = 0.0f;
+            if(character.stateMachine.IsCurrentState(CharacterState::Attack)) health -= 10.0f * delta;
+            else if(character.stateMachine.IsCurrentState(CharacterState::Dash)) health = 0.0f;
         }
     }
 };
@@ -288,25 +293,32 @@ struct Ghost : EnemyBase
     Ghost()
     {
         type = EnemyType::Ghost;
-        stateMachine.DefineState(EnemyState::Idle, UpdateRoutine::Loop, 0.2f);
-        stateMachine.DefineState(EnemyState::Attack, UpdateRoutine::PlayOnce, 0.2f);
-        stateMachine.DefineState(EnemyState::Move, UpdateRoutine::Loop, 0.2f);
-        stateMachine.DefineState(EnemyState::Dead, UpdateRoutine::PlayOnce, 0.2f);
-        stateMachine.def = &defMap.at(type)->enemyDef;
-        stateMachine.currStateName = EnemyState::Idle;
+        stateMachine.DefineState(EnemyState::Spawn, 0.2f, Style::PlayOnce);
+        stateMachine.DefineState(EnemyState::Idle, 0.2f, Style::Repeat);
+        stateMachine.DefineState(EnemyState::Attack, 0.2f, Style::PlayOnce);
+        stateMachine.DefineState(EnemyState::Move, 0.2f, Style::Repeat);
+        stateMachine.DefineState(EnemyState::Dead, 0.2f, Style::PlayOnce);
+        stateMachine.SetDefinition(&defMap.at(type)->enemyDef);
+        stateMachine.SetState(EnemyState::Spawn);
     }
-    inline void Update(Character& character, float delta) override
+    inline void UpdateStates(Character& character)
     {
+        if((stateMachine.IsCurrentState(EnemyState::Attack) || stateMachine.IsCurrentState(EnemyState::Dead) 
+            || stateMachine.IsCurrentState(EnemyState::Spawn)) && !stateMachine.HasFinishedPlaying()) return;
         float dist = GetDistance(character);
         if(dist <= 100.0f) stateMachine.SetState(EnemyState::Attack);
         else stateMachine.SetState((!InBounds(pos, mapBound) || dist < 1000.0f) ? EnemyState::Move : EnemyState::Idle);
-        if(stateMachine.currStateName == EnemyState::Move) Movement(character, delta);
+    }
+    inline void Update(Character& character, float delta) override
+    {
+        UpdateStates(character);
+        if(stateMachine.IsCurrentState(EnemyState::Move)) Movement(character, delta);
         UpdateSelf(character, delta);
         GiveDamage(character, delta);
     }
     inline void Movement(Character& character, float delta, float speed = 150.0f)
     {
-        direction = (character.pos.x < pos.x) ? Horizontal::Flip : Horizontal::Norm;
+        facesRight = character.pos.x >= pos.x;
         float angle = std::atan2(character.pos.y - pos.y, character.pos.x - pos.x);
         pos.x += std::cos(angle) * speed * delta;
         pos.y += std::sin(angle) * speed * delta;
@@ -314,7 +326,7 @@ struct Ghost : EnemyBase
     inline void GiveDamage(Character& character, float delta) override
     {
         if(health <= 0.0f && character.currPowerup == PowerupType::Shield) return;
-        if(GetDistance(character) < 100.0f &&  stateMachine.currStateName == EnemyState::Attack) character.health -= delta;
+        if(GetDistance(character) < 100.0f &&  stateMachine.IsCurrentState(EnemyState::Attack)) character.health -= delta;
     }
     inline void SetSpawnData(const vec2& pos) override
     {
@@ -329,15 +341,13 @@ struct Ghost : EnemyBase
 struct EnergyBall
 {
     vec2 pos;
-    float distanceCovered = 0.0f;
+    float travelDist = 0.0f;
     bool remove = false;
     inline void Update(Character& character, float delta, float speed = 150.0f)
     {
-        remove = distanceCovered > 300.0f;
-        float angle = std::atan2(character.pos.y - pos.y, character.pos.x - pos.x);
-        pos.x += std::cos(angle) * speed * delta;
-        pos.y += std::sin(angle) * speed * delta;
-        distanceCovered += speed * delta;
+        remove = travelDist > 300.0f;
+        pos += vec_from_angle(std::atan2(character.pos.y - pos.y, character.pos.x - pos.x)) * speed * delta;
+        travelDist += speed * delta;
     }
 };
 
@@ -346,20 +356,26 @@ struct Ranged : EnemyBase
     Ranged()
     {
         type = EnemyType::Ranged;
-        timeSinceAttack = 0.0f;
-        stateMachine.DefineState(EnemyState::Idle, UpdateRoutine::Loop, 0.2f);
-        stateMachine.DefineState(EnemyState::Spawn, UpdateRoutine::PlayOnce, 0.2f);
-        stateMachine.DefineState(EnemyState::Attack, UpdateRoutine::PlayOnce, 0.2f);
-        stateMachine.DefineState(EnemyState::Dead, UpdateRoutine::PlayOnce, 0.2f);
-        stateMachine.def = &defMap.at(type)->enemyDef;
-        stateMachine.currStateName = EnemyState::Spawn;
+        timeSinceLastAttack = 0.0f;
+        stateMachine.DefineState(EnemyState::Idle, 0.2f, Style::Repeat);
+        stateMachine.DefineState(EnemyState::Spawn, 0.2f, Style::PlayOnce);
+        stateMachine.DefineState(EnemyState::Attack, 0.2f, Style::PlayOnce);
+        stateMachine.DefineState(EnemyState::Dead, 0.2f, Style::PlayOnce);
+        stateMachine.SetDefinition(&defMap.at(type)->enemyDef);
+        stateMachine.SetState(EnemyState::Spawn);
         ball.remove = true;
+    }
+    inline void UpdateStates()
+    {
+        if((stateMachine.IsCurrentState(EnemyState::Attack) || stateMachine.IsCurrentState(EnemyState::Dead) ||
+            stateMachine.IsCurrentState(EnemyState::Spawn)) && !stateMachine.HasFinishedPlaying()) return;
+        stateMachine.SetState(timeSinceLastAttack < 5.0f ? EnemyState::Idle : EnemyState::Attack);
     }
     inline void Update(Character& character, float delta) override
     {
-        timeSinceAttack += delta;
-        stateMachine.SetState(timeSinceAttack < 5.0f ? EnemyState::Idle : EnemyState::Attack);
-        if(stateMachine.currStateName == EnemyState::Attack) Attack();
+        timeSinceLastAttack += delta;
+        UpdateStates();
+        if(stateMachine.IsCurrentState(EnemyState::Attack)) Attack();
         UpdateSelf(character, delta);
         UpdateEnergyBall(character, delta);
         GiveDamage(character, delta);
@@ -367,10 +383,10 @@ struct Ranged : EnemyBase
     inline void Attack()
     {
         ball.pos = pos;
-        ball.distanceCovered = 0.0f;
+        ball.travelDist = 0.0f;
         ball.remove = false;
-        stateMachine.currStateName = EnemyState::Idle;
-        timeSinceAttack = 0.0f;
+        stateMachine.SetState(EnemyState::Idle);
+        timeSinceLastAttack = 0.0f;
     }
     inline void Draw(Window& window) override
     {
@@ -399,52 +415,34 @@ struct Ranged : EnemyBase
     }
 private:
     EnergyBall ball;
-    float timeSinceAttack;
+    float timeSinceLastAttack;
 };
 
 struct EnemyWrapper
 {
-    EnemyBase* enemy;
+    EnemyBase* enemyBasePtr;
     bool remove = false;
     void Update(Character& character, float delta)
     {
-        if(enemy->stateMachine.currStateName == EnemyState::Dead) remove = enemy->stateMachine[EnemyState::Dead].playedOnce;
+        if(enemyBasePtr->stateMachine.IsCurrentState(EnemyState::Dead)) remove = enemyBasePtr->stateMachine.HasFinishedPlaying();
         int coinInc = remove ? (character.currPowerup == PowerupType::Money ? 3 : 1) : 0;
         character.coins += character.coinMultiplier * coinInc;
-        enemy->Update(character, delta);
+        enemyBasePtr->Update(character, delta);
     }
     void Draw(Window& window)
     {
-        enemy->Draw(window);
+        enemyBasePtr->Draw(window);
     }
 };
 
-const std::unordered_map<EnemyType, eSpawnType> spawnMap
-{
-    {EnemyType::Ghost, eSpawnType::Outside},
-    {EnemyType::Ranged, eSpawnType::Inside}
-};
-
-inline void SpawnEnemy(std::vector<EnemyWrapper>& enemies, EnemyType enemyType, Window& window)
+inline void SpawnEnemy(std::vector<EnemyWrapper>& enemies, const EnemyType& enemyType, Window& window)
 {
     switch(enemyType)
     {
         case EnemyType::Ghost: enemies.push_back({new Ghost()}); break;
         case EnemyType::Ranged: enemies.push_back({new Ranged()}); break;
     }
-    const vec2 scrSize = window.GetScreenSize();
-    vec2 pos = RndPointInRect(mapBound);
-    switch(spawnMap.at(enemyType))
-    {
-        case eSpawnType::Inside: break;
-        case eSpawnType::Outside:
-        {
-            pos.x += rand(0, 2) ? scrSize.w : -scrSize.w;
-            pos.y += rand(0, 2) ? 0 : scrSize.h;
-        }
-        break;
-    }
-    enemies.back().enemy->SetSpawnData(pos);
+    enemies.back().enemyBasePtr->SetSpawnData(RandomPoint(mapBound));
 }
 
 enum class SpawnSystemState
@@ -457,18 +455,18 @@ struct WaveSystem
 {
     float timeSinceSpawn;
     std::vector<EnemyWrapper> enemies;
-    SpawnSystemState spawnSystem;
+    SpawnSystemState spawnSysState;
     int currentWave, enemiesSpawned;
     inline void Reset()
     {
         timeSinceSpawn = 0.0f;
         currentWave = 1;
         enemiesSpawned = 0;
-        spawnSystem = SpawnSystemState::Cooldown;
-        for(auto& enemy : enemies)
+        spawnSysState = SpawnSystemState::Cooldown;
+        for(auto& e : enemies)
         {
-            delete enemy.enemy;
-            enemy.enemy = nullptr;
+            delete e.enemyBasePtr;
+            e.enemyBasePtr = nullptr;
         }
         enemies.clear();
     }
@@ -476,7 +474,7 @@ struct WaveSystem
     {
         timeSinceSpawn += window.GetDeltaTime();
 
-        switch(spawnSystem)
+        switch(spawnSysState)
         {
             case SpawnSystemState::Cooldown:
             {
@@ -484,7 +482,7 @@ struct WaveSystem
                 {
                     currentWave++;
                     timeSinceSpawn = 0.0f;
-                    spawnSystem = SpawnSystemState::Spawning;
+                    spawnSysState = SpawnSystemState::Spawning;
                 }
             }
             break;
@@ -503,7 +501,7 @@ struct WaveSystem
                 {
                     timeSinceSpawn = 0.0f;
                     enemiesSpawned = 0;
-                    spawnSystem = SpawnSystemState::Cooldown;
+                    spawnSysState = SpawnSystemState::Cooldown;
                 }
             }
             break;
@@ -516,7 +514,7 @@ struct WaveSystem
     inline void Draw(Window& window)
     {
         window.DrawText(window.GetWidth() * 0.5f, 30, "WAVE " + std::to_string(currentWave), 3.0f,
-            (spawnSystem == SpawnSystemState::Cooldown) ? Color{255, 255, 255, 255} : Color{255, 0, 0, 255}, {0.5f, 0.0f});
+            (spawnSysState == SpawnSystemState::Cooldown) ? Colors::White : Colors::DarkRed, {0.5f, 0.0f});
     
         for(auto& enemy : enemies) enemy.Draw(window);
     }
@@ -525,16 +523,16 @@ struct WaveSystem
 struct Chest
 {
     std::unordered_map<PowerupType, Sprite> powerups;
-    vec2 pos = vec2(900.0f, 170.0f);
+    vec2 pos = {900.0f, 170.0f};
     Animator<Sprite> animator;
     float elapsedTime;
-    enum class cUpdate
+    enum class ChestState
     {
         Opening,
         Closed,
         Open
-    } cUpdateType = cUpdate::Closed;
-    Chest()
+    } chestState= ChestState::Closed;
+    inline Chest()
     {
         animator.AddFrame("assets\\chest\\frames\\frame-0.png");
         animator.AddFrame("assets\\chest\\frames\\frame-1.png");
@@ -543,18 +541,17 @@ struct Chest
         powerups[PowerupType::Speed] = Sprite("assets\\chest\\powerups\\fast-run.png");
         powerups[PowerupType::Shield] = Sprite("assets\\chest\\powerups\\shield.png");
         powerups[PowerupType::Money] = Sprite("assets\\chest\\powerups\\money-icon.png");
-        animator.data.update = UpdateRoutine::PlayOnce;
-        animator.data.duration = 0.2f;
-        animator.data.Reverse();
+        animator.SetReverse(true);
+        animator.SetStyle(Style::PlayOnce);
+        animator.SetDuration(0.2f);
         elapsedTime = 5.0f;
     }
     inline void Reset()
     {
         elapsedTime = 5.0f;
-        animator.data.currFrameIndex = 0ull;
-        animator.data.elapsedTime = 0.0f;
-        animator.data.reverse = true;
-        cUpdateType = cUpdate::Closed;
+        animator.Reset();
+        animator.SetReverse(true);
+        chestState= ChestState::Closed;
     }
     inline void DrawPowerup(Character& character, Window& window)
     {
@@ -564,7 +561,7 @@ struct Chest
     }
     inline void Draw(Character& character, Window& window)
     {
-        if(cUpdateType == cUpdate::Closed && Distance(character.pos, pos) < 100.0f && elapsedTime > 5.0f)
+        if(chestState== ChestState::Closed && Distance(character.pos, pos) < 100.0f && elapsedTime > 5.0f)
             window.DrawText(pos.x - 100.0f, pos.y - 60.0f, "Press E to open.", 1.5f, {255, 255, 255, 255});
         
         window.DrawSprite(pos.x, pos.y, animator.GetFrame(), 6.0f);
@@ -574,39 +571,39 @@ struct Chest
     inline void Update(Character& character, Window& window)
     {
         const float dt = window.GetDeltaTime();
-        switch(cUpdateType)
+        switch(chestState)
         {
-            case cUpdate::Opening: 
+            case ChestState::Opening: 
             {
                 animator.Update(dt);
-                if(animator.data.playedOnce)
+                if(animator.HasFinishedPlaying())
                 {
                     character.currPowerup = (PowerupType)rand(0, 4);
-                    cUpdateType = cUpdate::Open;
+                    chestState= ChestState::Open;
                 } 
             }
             break;
-            case cUpdate::Closed: 
+            case ChestState::Closed: 
             {
                 animator.Update(dt);
                 elapsedTime += dt;
                 if(elapsedTime > 5.0f && window.GetKey(GLFW_KEY_E) == Key::Pressed && Distance(character.pos, pos) < 100.0f) 
                 {
                     elapsedTime = 0.0f;
-                    animator.data.Reverse();
-                    cUpdateType = cUpdate::Opening;
+                    animator.Reverse();
+                    chestState= ChestState::Opening;
                 }
             }
             break;
-            case cUpdate::Open:
+            case ChestState::Open:
             {
                 elapsedTime += dt;
                 if(elapsedTime > 10.0f) 
                 {
                     elapsedTime = 0.0f;
-                    animator.data.Reverse();
+                    animator.Reverse();
                     character.currPowerup = PowerupType::None;
-                    cUpdateType = cUpdate::Closed;
+                    chestState= ChestState::Closed;
                 }
             } 
             break;
@@ -699,7 +696,7 @@ struct Market
     }
     inline void ResetCharacter(Character& character)
     {
-        character.velocity = items["speed"].GetPower();
+        character.speed = items["speed"].GetPower();
         character.maxHealth = items["health"].GetPower();
         character.coinMultiplier = items["money"].GetPower();
     }

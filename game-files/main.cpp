@@ -20,7 +20,6 @@ private:
     WaveSystem waveController;
     Decal mapSprite;
     Chest chest;
-    ParticleSystem ps;
     DataNode config;
     MenuManager<GameState> menuManager;
     GameState currGameState = GameState::MainMenu;
@@ -45,41 +44,39 @@ public:
         mapSprite = Decal("assets\\misc\\map.png");
         menuBackgroundSprite = Decal("assets\\UI\\menu\\background.png");
 
-        menu["Start"].id = GameState::Main;
-        menu["Market"].id = GameState::Market;
-        menu["Exit"]["No"].id = GameState::MainMenu;
-        menu["Exit"]["Yes"].id = GameState::Exit;
-        menu["Exit"].tableSize = {2, 1};
-        menu.position = {30.0f, 250.0f};
-        menu.tableSize = {1, 3};
-        menu.size = 4.0f;
+        menu["Start"].SetId(GameState::Main);
+        menu["Market"].SetId(GameState::Market);
+        menu["Exit"]["No"].SetId(GameState::MainMenu);
+        menu["Exit"]["Yes"].SetId(GameState::Exit);
+        menu["Exit"].SetTableSize(2, 1);
+        menu.SetPos(30.0f, 250.0f);
+        menu.SetTableSize(1, 3);
+        menu.SetScale(4.0f);
         menu.BuildMenu();
 
         market.pos = GetScreenSize() * 0.5f;
         market.size = 5.0f;
         market.Deserialize(config);
 
-        ps.pause = false;
-
-        gameOverMenu["Retry"].id = GameState::Main;
-        gameOverMenu["Main Menu"].id = GameState::MainMenu;
-        gameOverMenu.position = GetScreenSize() * 0.5f;
-        gameOverMenu.textOrigin = {0.5f, 0.0f};
-        gameOverMenu.tableSize = {1, 2};
-        gameOverMenu.size = 4.0f;
+        gameOverMenu["Retry"].SetId(GameState::Main);
+        gameOverMenu["Main Menu"].SetId(GameState::MainMenu);
+        gameOverMenu.SetPos(GetScreenSize() * 0.5f);
+        gameOverMenu.SetOrigin(0.5f, 0.0f);
+        gameOverMenu.SetTableSize(1, 2);
+        gameOverMenu.SetScale(4.0f);
         gameOverMenu.BuildMenu();
 
-        pauseMenu["Main Menu"].id = GameState::MainMenu;
-        pauseMenu["Resume"].id = GameState::Main;
-        pauseMenu.position = GetScreenSize() * 0.5f;
-        pauseMenu.textOrigin = {0.5f, 0.0f};
-        pauseMenu.tableSize = {1, 2};
-        pauseMenu.size = 4.0f;
+        pauseMenu["Main Menu"].SetId(GameState::MainMenu);
+        pauseMenu["Resume"].SetId(GameState::Main);
+        pauseMenu.SetPos(GetScreenSize() * 0.5f);
+        pauseMenu.SetOrigin(0.5f, 0.0f);
+        pauseMenu.SetTableSize(1, 2);
+        pauseMenu.SetScale(4.0f);
         pauseMenu.BuildMenu();
 
         waveController.Reset();
 
-        menuManager.window = this;
+        menuManager.SetWindowHandle(this);
         menuManager.Close();
 
         Restart();
@@ -93,8 +90,6 @@ public:
         chest.Reset();
 
         market.ResetCharacter(character);
-
-        ps.Clear();
     }
     inline void UserUpdate() override
     {
