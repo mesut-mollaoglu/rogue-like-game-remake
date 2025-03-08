@@ -109,7 +109,7 @@ struct Character
     inline void UpdateStates(Window& window)
     {
         if((stateMachine.IsCurrentState(CharacterState::Dash) || stateMachine.IsCurrentState(CharacterState::Attack))
-            && !stateMachine.HasFinishedPlaying()) return;
+            && !stateMachine.HasCurrentAnimationFinishedPlaying()) return;
         if(window.GetKey(GLFW_KEY_LEFT_SHIFT) == Key::Pressed) stateMachine.SetState(CharacterState::Dash);
         else if(window.GetMouseButton(GLFW_MOUSE_BUTTON_1) == Key::Pressed) stateMachine.SetState(CharacterState::Attack);
         else stateMachine.SetState((window.GetKey(GLFW_KEY_A) == Key::Held || window.GetKey(GLFW_KEY_W) == Key::Held || 
@@ -304,7 +304,7 @@ struct Ghost : EnemyBase
     inline void UpdateStates(Character& character)
     {
         if((stateMachine.IsCurrentState(EnemyState::Attack) || stateMachine.IsCurrentState(EnemyState::Dead) 
-            || stateMachine.IsCurrentState(EnemyState::Spawn)) && !stateMachine.HasFinishedPlaying()) return;
+            || stateMachine.IsCurrentState(EnemyState::Spawn)) && !stateMachine.HasCurrentAnimationFinishedPlaying()) return;
         float dist = GetDistance(character);
         if(dist <= 100.0f) stateMachine.SetState(EnemyState::Attack);
         else stateMachine.SetState((!InBounds(pos, mapBound) || dist < 1000.0f) ? EnemyState::Move : EnemyState::Idle);
@@ -368,7 +368,7 @@ struct Ranged : EnemyBase
     inline void UpdateStates()
     {
         if((stateMachine.IsCurrentState(EnemyState::Attack) || stateMachine.IsCurrentState(EnemyState::Dead) ||
-            stateMachine.IsCurrentState(EnemyState::Spawn)) && !stateMachine.HasFinishedPlaying()) return;
+            stateMachine.IsCurrentState(EnemyState::Spawn)) && !stateMachine.HasCurrentAnimationFinishedPlaying()) return;
         stateMachine.SetState(timeSinceLastAttack < 5.0f ? EnemyState::Idle : EnemyState::Attack);
     }
     inline void Update(Character& character, float delta) override
@@ -424,7 +424,7 @@ struct EnemyWrapper
     bool remove = false;
     void Update(Character& character, float delta)
     {
-        if(enemyBasePtr->stateMachine.IsCurrentState(EnemyState::Dead)) remove = enemyBasePtr->stateMachine.HasFinishedPlaying();
+        if(enemyBasePtr->stateMachine.IsCurrentState(EnemyState::Dead)) remove = enemyBasePtr->stateMachine.HasCurrentAnimationFinishedPlaying();
         int coinInc = remove ? (character.currPowerup == PowerupType::Money ? 3 : 1) : 0;
         character.coins += character.coinMultiplier * coinInc;
         enemyBasePtr->Update(character, delta);
@@ -492,7 +492,7 @@ struct WaveSystem
                 {
                     if(enemiesSpawned < currentWave) 
                     {
-                        SpawnEnemy(enemies, (EnemyType)rand(0, 2), window);
+                        SpawnEnemy(enemies, (EnemyType)random(0, 2), window);
                         timeSinceSpawn = 0.0f;
                         enemiesSpawned++;
                     }
@@ -564,7 +564,7 @@ struct Chest
         if(chestState== ChestState::Closed && Distance(character.pos, pos) < 100.0f && elapsedTime > 5.0f)
             window.DrawText(pos.x - 100.0f, pos.y - 60.0f, "Press E to open.", 1.5f, {255, 255, 255, 255});
         
-        window.DrawSprite(pos.x, pos.y, animator.GetFrame(), 6.0f);
+        window.DrawSprite(pos.x, pos.y, animator.GetImage(), 6.0f);
         
         DrawPowerup(character, window);
     }
@@ -578,7 +578,7 @@ struct Chest
                 animator.Update(dt);
                 if(animator.HasFinishedPlaying())
                 {
-                    character.currPowerup = (PowerupType)rand(0, 4);
+                    character.currPowerup = (PowerupType)random(0, 4);
                     chestState= ChestState::Open;
                 } 
             }

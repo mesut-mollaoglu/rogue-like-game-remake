@@ -138,7 +138,7 @@ public:
                 default: break;
             }
         
-        Clear({0, 0, 0, 255});
+        Clear(Colors::Black);
 
         menuManager.Draw();
         
@@ -170,7 +170,7 @@ public:
         
         chest.Update(character, *this);
 
-        Clear({0, 0, 0, 0});
+        Clear(Colors::Transparent);
 
         batch.Draw(mapSprite, GetViewport());
 
