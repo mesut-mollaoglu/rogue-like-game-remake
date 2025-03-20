@@ -148,13 +148,13 @@ public:
     {
         if(GetKey(GLFW_KEY_ESCAPE) == Key::Pressed) currGameState = GameState::MainMenu;
 
-        market.Update(character, *this);
+        market.Update(character, this);
 
         Clear({0, 0, 0, 255});
 
         SetPixelMode(PixelMode::Alpha);
 
-        market.Draw(character, *this);
+        market.Draw(character, this);
 
         SetPixelMode(PixelMode::Normal);
     }
@@ -164,11 +164,11 @@ public:
 
         if(character.health <= 0) currGameState = GameState::EndFail;
         
-        character.Update(*this);
+        character.Update(this);
 
-        waveController.Update(*this, character);
+        waveController.Update(this, character);
         
-        chest.Update(character, *this);
+        chest.Update(character, this);
 
         Clear(Colors::Transparent);
 
@@ -176,11 +176,11 @@ public:
 
         SetPixelMode(PixelMode::Alpha);
  
-        chest.Draw(character, *this);
+        chest.Draw(character, this);
 
-        character.Draw(*this);
+        character.Draw(this);
 
-        waveController.Draw(*this);
+        waveController.Draw(this);
 
         SetPixelMode(PixelMode::Normal);
     }
@@ -250,7 +250,7 @@ public:
 int main()
 {
     Game instance;
-    instance.Start(1024, 768);
+    instance.Start(1024, 768, "Rogue-like-game");
     instance.Terminate();
     return 0;
 }
