@@ -3,197 +3,166 @@
 #define VERTEX_COLOR
 #include "game.h"
 
-enum class GameState
-{
-    Main,
-    MainMenu,
-    EndFail,
-    Market,
-    Pause,
-    Exit
-};
-
 class Game : public Window
 {
 private:
+    enum class State
+    {
+        InGame,
+        MainMenu,
+        EndFail,
+        Market,
+        PauseMenu,
+        QuitGame
+    };
     Character character;
     WaveSystem waveController;
-    Decal mapSprite;
+    Decal mapDecal;
     Chest chest;
     DataNode config;
-    MenuManager<GameState> menuManager;
-    GameState currGameState = GameState::MainMenu;
-    Decal menuBackgroundSprite;
-    SpriteBatch batch;
-    Menu<GameState> menu;
+    MenuManager<Game::State> menuManager;
+    Game::State currGameState = Game::State::MainMenu;
+    Decal menuBgDecal;
+    SpriteBatch sprBatch;
     Market market;
-    Menu<GameState> gameOverMenu;
-    Menu<GameState> pauseMenu;
+    Menu<Game::State> mainMenu;
+    Menu<Game::State> gameOverMenu;
+    Menu<Game::State> pauseMenu;
 public:
     inline void UserStart() override
     {
         srand(time(0));
-
-        batch = SpriteBatch(this);
-
+        sprBatch = SpriteBatch(this);
         Deserialize(config, "datafile.txt");
-
         character = Character();
         character.Deserialize(config);
-
-        mapSprite = Decal("assets\\misc\\map.png");
-        menuBackgroundSprite = Decal("assets\\UI\\menu\\background.png");
-
-        menu["Start"].SetId(GameState::Main);
-        menu["Market"].SetId(GameState::Market);
-        menu["Exit"]["No"].SetId(GameState::MainMenu);
-        menu["Exit"]["Yes"].SetId(GameState::Exit);
-        menu["Exit"].SetTableSize(2, 1);
-        menu.SetPos(30.0f, 250.0f);
-        menu.SetTableSize(1, 3);
-        menu.SetScale(4.0f);
-        menu.BuildMenu();
-
+        mapDecal = Decal("assets\\misc\\map.png");
+        menuBgDecal = Decal("assets\\UI\\menu\\background.png");
+        mainMenu["Start"].SetId(Game::State::InGame);
+        mainMenu["Market"].SetId(Game::State::Market);
+        mainMenu["Quit"]["No"].SetId(Game::State::MainMenu);
+        mainMenu["Quit"]["Yes"].SetId(Game::State::QuitGame);
+        mainMenu["Quit"].SetTableSize(2, 1);
+        mainMenu.SetPos(30.0f, 250.0f);
+        mainMenu.SetTableSize(1, 3);
+        mainMenu.SetScale(4.0f);
+        mainMenu.Build();
         market.pos = GetScreenSize() * 0.5f;
         market.size = 5.0f;
         market.Deserialize(config);
-
-        gameOverMenu["Retry"].SetId(GameState::Main);
-        gameOverMenu["Main Menu"].SetId(GameState::MainMenu);
+        gameOverMenu["Retry"].SetId(Game::State::InGame);
+        gameOverMenu["Main Menu"].SetId(Game::State::MainMenu);
         gameOverMenu.SetPos(GetScreenSize() * 0.5f);
         gameOverMenu.SetOrigin(0.5f, 0.0f);
         gameOverMenu.SetTableSize(1, 2);
         gameOverMenu.SetScale(4.0f);
-        gameOverMenu.BuildMenu();
-
-        pauseMenu["Main Menu"].SetId(GameState::MainMenu);
-        pauseMenu["Resume"].SetId(GameState::Main);
+        gameOverMenu.Build();
+        pauseMenu["Main Menu"].SetId(Game::State::MainMenu);
+        pauseMenu["Resume"].SetId(Game::State::InGame);
         pauseMenu.SetPos(GetScreenSize() * 0.5f);
         pauseMenu.SetOrigin(0.5f, 0.0f);
         pauseMenu.SetTableSize(1, 2);
         pauseMenu.SetScale(4.0f);
-        pauseMenu.BuildMenu();
-
+        pauseMenu.Build();
         waveController.Reset();
-
         menuManager.SetWindowHandle(this);
         menuManager.Close();
-
         Restart();
     }
     inline void Restart()
     {
         character.SetDefault();
-
         waveController.Reset();
-
         chest.Reset();
-
         market.ResetCharacter(character);
     }
     inline void UserUpdate() override
     {
         switch(currGameState)
         {
-            case GameState::MainMenu: MenuDrawAndUpdate(); break;
-            case GameState::Main: MainDrawAndUpdate(); break;
-            case GameState::Market: MarketDrawAndUpdate(); break;
-            case GameState::EndFail: EndFailDrawAndUpdate(); break;
-            case GameState::Pause: PauseDrawAndUpdate(); break;
+            case Game::State::MainMenu: MenuDrawAndUpdate(); break;
+            case Game::State::InGame: MainDrawAndUpdate(); break;
+            case Game::State::Market: MarketDrawAndUpdate(); break;
+            case Game::State::EndFail: EndFailDrawAndUpdate(); break;
+            case Game::State::PauseMenu: PauseDrawAndUpdate(); break;
         }
-        batch.Flush();
+        sprBatch.Flush();
     }
     inline void MenuDrawAndUpdate()
     {
-        if(menuManager.Empty()) menuManager.Open(menu);
-
-        std::optional<GameState> state = menuManager.Update();
-
+//Update
+        if(menuManager.Empty()) menuManager.Open(mainMenu);
+        std::optional<Game::State> state = menuManager.Update();
         if(state.has_value())
             switch(state.value())
             {
-                case GameState::Main:
+                case Game::State::InGame:
                 {
                     Restart();
                     menuManager.Close();
-                    currGameState = GameState::Main;
+                    currGameState = Game::State::InGame;
                 }
                 break;
-                case GameState::Exit:
+                case Game::State::QuitGame:
                 {
                     glfwSetWindowShouldClose(GetHandle(), GL_TRUE);
                 }
                 break;
-                case GameState::Market:
+                case Game::State::Market:
                 {
                     menuManager.Close();
-                    currGameState = GameState::Market;
+                    currGameState = Game::State::Market;
                 }
                 break;
-                case GameState::MainMenu:
+                case Game::State::MainMenu:
                 {
                     menuManager.MoveBack();
                 }
                 break;
                 default: break;
             }
-        
+//Draw
         Clear(Colors::Black);
-
         menuManager.Draw();
-        
-        batch.Draw(menuBackgroundSprite, GetViewport()); 
+        sprBatch.Draw(menuBgDecal, GetViewport());
     }
     inline void MarketDrawAndUpdate()
     {
-        if(GetKey(GLFW_KEY_ESCAPE) == Key::Pressed) currGameState = GameState::MainMenu;
-
+//Update
+        if(GetKey(GLFW_KEY_ESCAPE) == Key::Pressed) currGameState = Game::State::MainMenu;
         market.Update(character, this);
-
-        Clear({0, 0, 0, 255});
-
+//Draw
+        Clear(Colors::Black);
         SetPixelMode(PixelMode::Alpha);
-
         market.Draw(character, this);
-
         SetPixelMode(PixelMode::Normal);
     }
     inline void MainDrawAndUpdate()
     {
-        if(GetKey(GLFW_KEY_ESCAPE) == Key::Pressed) currGameState = GameState::Pause;
-
-        if(character.health <= 0) currGameState = GameState::EndFail;
-        
+//Update
+        if(GetKey(GLFW_KEY_ESCAPE) == Key::Pressed) currGameState = Game::State::PauseMenu;
+        if(character.health <= 0) currGameState = Game::State::EndFail;
         character.Update(this);
-
         waveController.Update(this, character);
-        
         chest.Update(character, this);
-
+//Draw
         Clear(Colors::Transparent);
-
-        batch.Draw(mapSprite, GetViewport());
-
+        sprBatch.Draw(mapDecal, GetViewport());
         SetPixelMode(PixelMode::Alpha);
- 
         chest.Draw(character, this);
-
         character.Draw(this);
-
         waveController.Draw(this);
-
         SetPixelMode(PixelMode::Normal);
     }
     inline void PauseDrawAndUpdate()
     {
+//Update
         if(menuManager.Empty()) menuManager.Open(pauseMenu);
-
-        std::optional<GameState> state = menuManager.Update();
-
+        std::optional<Game::State> state = menuManager.Update();
         if(state.has_value())
             switch(state.value())
             {
-                case GameState::Main: case GameState::MainMenu:
+                case Game::State::InGame: case Game::State::MainMenu:
                 {
                     menuManager.Close();
                     currGameState = state.value();
@@ -201,42 +170,37 @@ public:
                 break;
                 default: break;
             }
-
-        Clear({0, 0, 0, 255});
-
-        DrawText(GetWidth() * 0.5f, 100, "PAUSED", 4.0f, {255, 255, 255, 255}, 0.5f);
-
+//Draw
+        Clear(Colors::Black);
+        DrawText(GetWidth() * 0.5f, 100, "PAUSED", 4.0f, Colors::White, 0.5f);
         menuManager.Draw();
     }
     inline void EndFailDrawAndUpdate()
     {
+//Update
         if(menuManager.Empty()) menuManager.Open(gameOverMenu);
-
-        std::optional<GameState> state = menuManager.Update();
-
+        std::optional<Game::State> state = menuManager.Update();
         if(state.has_value())
             switch(state.value())
             {
-                case GameState::Main:
+                case Game::State::InGame:
                 {
                     Restart();
                     menuManager.Close();
-                    currGameState = GameState::Main;
+                    currGameState = Game::State::InGame;
                 }
                 break;
-                case GameState::MainMenu:
+                case Game::State::MainMenu:
                 {
                     menuManager.Close();
-                    currGameState = GameState::MainMenu;
+                    currGameState = Game::State::MainMenu;
                 }
                 break;
                 default: break;
             }
-
-        Clear({0, 0, 0, 255});
-
-        DrawText(GetWidth() * 0.5, 100, "You lost", 6.0f, {255, 255, 255, 255}, 0.5f);
-
+//Draw
+        Clear(Colors::Black);
+        DrawText(GetWidth() * 0.5, 100, "Defeat", 6.0f, Colors::White, 0.5f);
         menuManager.Draw();
     }
     inline void Terminate()
